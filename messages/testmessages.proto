@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package Raft;
+
+message HeartbeatTest {
+  string fromnode = 1;
+  string tonode = 2;
+  string message = 3;
+};
