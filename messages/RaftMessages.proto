@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package Raft;
+
+message RequestVote {
+  string from = 1;
+  string to = 2;
+  int32 term = 3;
+  int32 lastLogIndex = 4;
+  int32 lastLogTerm = 5;
+};
+
+message VoteResult {
+  string from = 1;
+  string to = 2;
+  int32 term = 3;
+  bool granted = 4;
+};
+
+message WrapperMessage {
+  string messageType = 1;
+  string serializedMessage = 2;
+};
+

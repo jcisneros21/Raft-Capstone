@@ -6,7 +6,7 @@ import subprocess
 import re
 
 class server:
-    def __init__(self):
+    def __init__(self, callback):
         self.nodeaddrs = []
 
         # figure out who we need to listen for
@@ -21,10 +21,15 @@ class server:
                 self.nodeaddrs.append((hostaddr, socketnum))
 
         nodeaddrsfile.close()
+        self.listenThread = None
+        self.socket = None
+        self.participantCallback = callback
 
-
-    def start(self, timeout):
+    def start(self):
+        self.listenThread = threading.Thread(self.listen)
+        self.listenThread.start()
         # start listening for them
+        """
         listensocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         listensocket.settimeout(timeout)
         listensocket.bind(self.addr)
@@ -43,8 +48,21 @@ class server:
                 temp.message = 'I win!!'
                 listensocket.sendto(temp.SerializeToString(), node)
                 print("I win!")
+        """
+
+    def listen(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.bind(self.addr)
+        while True:
+            data = listensocket.recv()
+            self.participantCallback(data)
+
+    def talk(self, messageType, message):
+        messagetosend = protoc.WrapperMessage()
+        messagetosend.messageType = messageType
+        messagetosend.serializedMessage = message.SerializeToString()
+        self.socket.sendto(messagetosend.SerializeToString(), message.to)
             
-    #def listen(self, nodeaddrsindex):
     def getownip(self):
         result = subprocess.check_output(['ifconfig'], universal_newlines=True)
         ips = re.findall('inet addr:[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}', result)
@@ -52,7 +70,7 @@ class server:
             if ips[i][10:12] == '10':
                 return ips[i][10:]
 
-test = server()
+#test = server()
 # for now this argument is the election timeout
-test.start(int(sys.argv[1]))
+#test.start(int(sys.argv[1]))
 

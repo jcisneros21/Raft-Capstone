@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package Raft;
+
+message ServerMessage {
+  string messageType = 1;
+  string serializedMessage = 2;
+}

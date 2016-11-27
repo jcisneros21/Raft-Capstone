@@ -1,55 +1,82 @@
-import server
-import RequestVote_pb2
+from server import server
 import random
 import threading
-import queue
-
-OutQueue = queue.Queue()
-InQueue = queue.Queue()
+from State import *
 
 class Participant:
-  self __init__(self):
-    self.termNumber
-    self.numNodes
+  def __init__(self):
+    self.termNumber = 0
+    self.numNodes = 0
 
-class CandidateNode:
-  self __init__(self):
-    Participant.__init__(self)
-    self.electionTimeout
-    self.votes
-    self.timer
+    self.server = server(self.handleMessage)
+    self.server.start()
 
-  def requestVotes():
-      for server in self.nodeaddrs:
-         message = RequestVote_pb2.RequestVote()
-         # How are we going to do this?
-         # message.from = self.addr
-         OutQueue.put_nowait(RequestVote_pb2)
+    self.state = FollowerState()
+    self.timer = self.initTimer()
 
-  def selectTimeout():
-      self.electionTimeout = random.uniform(0.150,0.300)
+  def isFollower(self):
+    return isinstance(self.state, FollowerState)
 
-  def transToLeader():
+  def isCandidate(self):
+    return isinstance(self.state, CandidateState)
 
-  def transToFollower():
+  def isLeader(self):
+    return isinstance(self.state, LeaderState)
 
-  def initTimer():
-      self.timer = threading.Timer(self.electionTimeout, ).start()
+  def selectTimeout(self):
+    return random.uniform(0.150, 0.300)
 
-class FollowerNode():
-    self __init__(sef):
-        Participant.__init__(self)
-        self.electionTimeout
+  def initTimer(self):
+    self.electionTimeout = self.selectTimeout()
+    self.timer = threading.Timer(self.electionTimeout, self.transition)
+    self.timer.start()
 
-    def selectTimeout():
-        self.electionTimeout = random.uniform(0.150,0.300)
+  def transition(self, newState):
+    # if we have called transition and the election timer is still alive then we know
+    # we heard from someone with a higher term number than us so immediately transition
+    # to follower
+    if self.isFollower():
+      if self.timer.isAlive():
+        self.state.stop()
+        self.state = FollowerState()
+        self.initTimer()
+      elif:
+        self.state.stop()
+        self.state = CandidateState()
+        self.initTimer()
+    elif self.isCandidate():
+      if self.timer.isAlive() or self.state.heardFromLeader:
+        self.state.stop()
+        self.state = FollowerState()
+        self.initTimer()
+      elif self.state.votes > (self.numNodes / 2):
+        self.state.stop()
+        self.state = LeaderState()
+      elif not self.state.heardFromLeader:
+        self.state.stop()
+        self.state = CandidateState()
+        self.initTimer()
+    elif self.isLeader():
+      self.state.stop()
+      self.state = FollowerState()
+      self.initTimer()
 
-    def appendEnrtyReply():
+  def handleMessage(self, incomingMessage):
+    print("Handling message")
+    servermessage = protoc.ServerMessage()
+    servermessage.ParseFromString(incomingMessage)
 
+    innermessage = None
+    if servermessage.messageType == "RequestVote":
+      innermessage = protoc.RequestVote()
+      innermessage.ParseFromString(servermessage.serializedMessage)
+    elif servermessage.messageType == "AppendEntries":
+      innermessage = protoc.AppendEntries()
+      innermessage.ParseFromString(servermessage.serializedMessage)
 
-    def requestVoteReply():
+    if innermessage.termNumber > self.termNumber:
+      self.termNumber = innermessage.termNumber
+      self.transition()
 
-    def transToCandidate():
+    self.state.handleMessage(servermessage.messageType, servermessage.serializedMessage)
 
-    def initTimer():
-        self.timer = threading.Timer(self.electionTimeout, ).start()
