@@ -9,7 +9,7 @@ class server:
     def __init__(self):
         self.nodeaddrs = []
 
-# figure out who we need to listen for
+        # figure out who we need to listen for
         nodeaddrsfile = open('nodeaddrs.txt', 'r')
 
         for line in nodeaddrsfile:
@@ -24,7 +24,7 @@ class server:
 
 
     def start(self, timeout):
-# start listening for them
+        # start listening for them
         listensocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         listensocket.settimeout(timeout)
         listensocket.bind(self.addr)
