@@ -13,7 +13,8 @@ class Participant:
     self.server.start()
 
     self.state = FollowerState()
-    self.timer = self.initTimer()
+    self.timer = None
+    self.initTimer()
 
   def isFollower(self):
     return isinstance(self.state, FollowerState)
@@ -32,7 +33,7 @@ class Participant:
     self.timer = threading.Timer(self.electionTimeout, self.transition)
     self.timer.start()
 
-  def transition(self, newState):
+  def transition(self):
     # if we have called transition and the election timer is still alive then we know
     # we heard from someone with a higher term number than us so immediately transition
     # to follower
