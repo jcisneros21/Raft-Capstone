@@ -54,10 +54,12 @@ class CandidateState(State):
       if message.granted:
         votes += 1
 
-  #def requestVotes():
-    #for server in self.nodeaddrs:
+  def requestVotes():
+    for server in self.nodeaddrs:
       #message = RequestVote_pb2.RequestVote()
       #OutQueue.put_nowait(RequestVote_pb2)
+      message = protoc.RequestVote()
+      message.fromNode = 
 
 class FollowerState(State):
   def __init__(self):

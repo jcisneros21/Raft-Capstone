@@ -66,10 +66,12 @@ class server:
             
     def getownip(self):
         result = subprocess.check_output(['ifconfig'], universal_newlines=True)
-        ips = re.findall('inet addr:[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}', result)
-        for i in range(len(ips)):
-            if ips[i][10:12] == '10':
-                return ips[i][10:]
+        ips = re.findall('inet[ addr]*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}', result)
+        #print(ips[0][5:14])
+        return ips[0][5:14]
+        #for i in range(len(ips)):
+        #    if ips[i][10:12] == '10':
+        #        return ips[i][10:]
 
 #test = server()
 # for now this argument is the election timeout

@@ -30,24 +30,24 @@ class Participant:
 
   def initTimer(self):
     self.electionTimeout = self.selectTimeout()
-    self.timer = threading.Timer(self.electionTimeout, self.transition)
+    self.timer = threading.Timer(self.electionTimeout, self.transition, [True,])
     self.timer.start()
 
-  def transition(self):
+  def transition(self, fromTimer=False):
     # if we have called transition and the election timer is still alive then we know
     # we heard from someone with a higher term number than us so immediately transition
     # to follower
     if self.isFollower():
-      if self.timer.isAlive():
-        self.state.stop()
-        self.state = FollowerState()
-        self.initTimer()
-      else:
+      if fromTimer:
         self.state.stop()
         self.state = CandidateState()
         self.initTimer()
+      else:
+        self.state.stop()
+        self.state = FollowerState()
+        self.initTimer()
     elif self.isCandidate():
-      if self.timer.isAlive() or self.state.heardFromLeader:
+      if not fromTimer or self.state.heardFromLeader:
         self.state.stop()
         self.state = FollowerState()
         self.initTimer()
