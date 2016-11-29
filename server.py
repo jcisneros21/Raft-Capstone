@@ -23,6 +23,7 @@ class server:
         nodeaddrsfile.close()
         self.listenThread = None
         self.socket = None
+        self.listensocket = None
         self.participantCallback = callback
 
     def start(self):
@@ -54,7 +55,7 @@ class server:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind(self.addr)
         while True:
-            data = listensocket.recv()
+            data = self.socket.recv(1024)
             self.participantCallback(data)
 
     def talk(self, messageType, message):

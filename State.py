@@ -21,7 +21,7 @@ class State():
 
 class LeaderState(State):
   def __init__(self):
-    State.__init__()
+    State.__init__(self)
     print("Leader")
     
   #def appendEntries():
@@ -31,7 +31,7 @@ class LeaderState(State):
 
 class CandidateState(State):
   def __init__(self):
-    State.__init__()
+    State.__init__(self)
     print("Candidate")
     self.votes = 0
     self.heardFromLeader = False
@@ -61,7 +61,7 @@ class CandidateState(State):
 
 class FollowerState(State):
   def __init__(self):
-    State.__init__()
+    State.__init__(self)
     print("Follower")
     self.voted = False
 
