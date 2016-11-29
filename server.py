@@ -1,6 +1,6 @@
 import threading
 import socket
-import testmessages_pb2 as protoc
+import RaftMessages_pb2 as protoc
 import sys
 import subprocess
 import re
@@ -26,7 +26,7 @@ class server:
         self.participantCallback = callback
 
     def start(self):
-        self.listenThread = threading.Thread(self.listen)
+        self.listenThread = threading.Thread(None, self.listen)
         self.listenThread.start()
         # start listening for them
         """
@@ -61,7 +61,7 @@ class server:
         messagetosend = protoc.WrapperMessage()
         messagetosend.messageType = messageType
         messagetosend.serializedMessage = message.SerializeToString()
-        self.socket.sendto(messagetosend.SerializeToString(), message.to)
+        self.socket.sendto(messagetosend.SerializeToString(), message.toNode)
             
     def getownip(self):
         result = subprocess.check_output(['ifconfig'], universal_newlines=True)

@@ -1,4 +1,5 @@
 import server
+import RaftMessages_pb2 as protoc
 
 class State():
   def __init__(self):
@@ -6,14 +7,14 @@ class State():
   
   def sendVoteNACK(self, toNode, termNumber):
     voteack = protoc.VoteResult()
-    voteack.to = toNode
+    voteack.toNode = toNode
     voteack.term = termNumber
     voteack.granted = False
     servercallback(voteack)
 
   def sendVoteACK(self, toNode, termNumber):
     voteack = protoc.VoteResult()
-    voteack.to = toNode
+    voteack.toNode = toNode
     voteack.term = termNumber
     voteack.granted = True
     servercallback("VoteResult", voteack)
@@ -43,9 +44,10 @@ class CandidateState(State):
     if messageType == "RequestVote":
       message = protoc.RequestVote()
       message.ParseFromString(message)
-      sendVoteNACK(message.from, termNumber)
+      sendVoteNACK(message.fromNode, termNumber)
     elif messageType == "AppendEntries":
       #TODO: implement this
+      pass
     elif messageType == "VoteResult":
       message = protoc.VoteResult()
       message.ParseFromString(message)
@@ -72,9 +74,10 @@ class FollowerState(State):
       message = protoc.RequestVote()
       message.ParseFromString(message)
       if self.voted:
-        self.sendVoteNACK(message.from, termNumber)
+        self.sendVoteNACK(message.fromNode, termNumber)
       else:
-        self.sendVoteACK(message.from, termNumber)
+        self.sendVoteACK(message.fromNode, termNumber)
     elif messageType == "AppendEntries":
       # TODO: implement this
+      pass
 

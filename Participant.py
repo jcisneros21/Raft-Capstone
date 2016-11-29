@@ -2,13 +2,14 @@ from server import server
 import random
 import threading
 from State import *
+import RaftMessages_pb2 as protoc
 
 class Participant:
   def __init__(self):
     self.termNumber = 0
     self.numNodes = 0
 
-    self.server = server(self.handleMessage)
+    self.server = server.server(self.handleMessage)
     self.server.start()
 
     self.state = FollowerState()
@@ -40,7 +41,7 @@ class Participant:
         self.state.stop()
         self.state = FollowerState()
         self.initTimer()
-      elif:
+      else:
         self.state.stop()
         self.state = CandidateState()
         self.initTimer()

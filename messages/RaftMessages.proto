@@ -3,16 +3,16 @@ syntax = "proto3";
 package Raft;
 
 message RequestVote {
-  string from = 1;
-  string to = 2;
+  string fromNode = 1;
+  string toNode = 2;
   int32 term = 3;
   int32 lastLogIndex = 4;
   int32 lastLogTerm = 5;
 };
 
 message VoteResult {
-  string from = 1;
-  string to = 2;
+  string fromNode = 1;
+  string toNode = 2;
   int32 term = 3;
   bool granted = 4;
 };
