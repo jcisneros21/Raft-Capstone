@@ -3,22 +3,22 @@ syntax = "proto3";
 package Raft;
 
 message RequestVote {
-  string fromNode = 1;
-  string toNode = 2;
+  repeated string fromNode = 1;
+  repeated string toNode = 2;
   int32 term = 3;
   int32 lastLogIndex = 4;
   int32 lastLogTerm = 5;
 };
 
 message VoteResult {
-  string fromNode = 1;
-  string toNode = 2;
+  repeated string fromNode = 1;
+  repeated string toNode = 2;
   int32 term = 3;
   bool granted = 4;
 };
 
 message WrapperMessage {
   string messageType = 1;
-  string serializedMessage = 2;
+  bytes serializedMessage = 2;
 };
 

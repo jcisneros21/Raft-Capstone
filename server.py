@@ -6,7 +6,7 @@ import subprocess
 import re
 
 class server:
-    def __init__(self, callback):
+    def __init__(self, callback, port):
         self.nodeaddrs = []
 
         # figure out who we need to listen for
@@ -15,19 +15,20 @@ class server:
         for line in nodeaddrsfile:
             hostaddr = line.split(',')[0]
             socketnum = int(line.split(',')[1].strip('\n'))
-            if hostaddr == self.getownip():
-                self.addr = (hostaddr, socketnum)
-            else:
-                self.nodeaddrs.append((hostaddr, socketnum))
+            #if hostaddr == self.getownip():
+            self.addr = ("0.0.0.0", port)
+            #else:
+            if socketnum != port:
+                self.nodeaddrs.append(('0.0.0.0', socketnum))
 
         nodeaddrsfile.close()
         self.listenThread = None
         self.socket = None
-        self.listensocket = None
         self.participantCallback = callback
 
     def start(self):
         self.listenThread = threading.Thread(None, self.listen)
+        print("Starting listen thread.")
         self.listenThread.start()
         # start listening for them
         """
@@ -54,15 +55,32 @@ class server:
     def listen(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind(self.addr)
+        print("Listening on {}".format(self.addr))
         while True:
+            print("In listen")
             data = self.socket.recv(1024)
+            print("Got something!!")
+            print(data)
             self.participantCallback(data)
 
     def talk(self, messageType, message):
+        message.fromNode.append(self.addr[0])
+        message.fromNode.append(str(self.addr[1]))
         messagetosend = protoc.WrapperMessage()
         messagetosend.messageType = messageType
+        if messageType == "RequestVote":
+          for server in self.nodeaddrs:
+            message.toNode.append(server[0])
+            message.toNode.append(str(server[1]))
+            messagetosend.serializedMessage = message.SerializeToString()
+            #print("Sending:")
+            #print(message)
+            #print()
+            sent = self.socket.sendto(messagetosend.SerializeToString(), (message.toNode[0], int(message.toNode[1])))
+            print("sendto returned {}".format(sent))
+        return
         messagetosend.serializedMessage = message.SerializeToString()
-        self.socket.sendto(messagetosend.SerializeToString(), message.toNode)
+        self.socket.sendto(messagetosend.SerializeToString(), (message.toNode[0], int(message.toNode[1])))
             
     def getownip(self):
         result = subprocess.check_output(['ifconfig'], universal_newlines=True)

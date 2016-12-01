@@ -5,14 +5,14 @@ from State import *
 import RaftMessages_pb2 as protoc
 
 class Participant:
-  def __init__(self):
+  def __init__(self, port):
     self.termNumber = 0
     self.numNodes = 0
 
-    self.server = server.server(self.handleMessage)
+    self.server = server.server(self.handleMessage, port)
     self.server.start()
 
-    self.state = FollowerState()
+    self.state = FollowerState(0, self.server)
     self.timer = None
     self.initTimer()
 
@@ -34,38 +34,39 @@ class Participant:
     self.timer.start()
 
   def transition(self, fromTimer=False):
+    self.termNumber += 1
     # if we have called transition and the election timer is still alive then we know
     # we heard from someone with a higher term number than us so immediately transition
     # to follower
     if self.isFollower():
       if fromTimer:
         self.state.stop()
-        self.state = CandidateState()
+        self.state = CandidateState(self.termNumber, self.server)
         self.initTimer()
       else:
         self.state.stop()
-        self.state = FollowerState()
+        self.state = FollowerState(self.termNumber, self.server)
         self.initTimer()
     elif self.isCandidate():
       if not fromTimer or self.state.heardFromLeader:
         self.state.stop()
-        self.state = FollowerState()
+        self.state = FollowerState(self.termNumber, self.server)
         self.initTimer()
       elif self.state.votes > (self.numNodes / 2):
         self.state.stop()
-        self.state = LeaderState()
+        self.state = LeaderState(self.termNumber, self.server)
       elif not self.state.heardFromLeader:
         self.state.stop()
-        self.state = CandidateState()
+        self.state = CandidateState(self.termNumber, self.server)
         self.initTimer()
     elif self.isLeader():
       self.state.stop()
-      self.state = FollowerState()
+      self.state = FollowerState(self.termNumber, self.server)
       self.initTimer()
 
   def handleMessage(self, incomingMessage):
     print("Handling message")
-    servermessage = protoc.ServerMessage()
+    servermessage = protoc.WrapperMessage()
     servermessage.ParseFromString(incomingMessage)
 
     innermessage = None
@@ -76,9 +77,9 @@ class Participant:
       innermessage = protoc.AppendEntries()
       innermessage.ParseFromString(servermessage.serializedMessage)
 
-    if innermessage.termNumber > self.termNumber:
-      self.termNumber = innermessage.termNumber
+    if innermessage.term > self.termNumber:
+      self.termNumber = innermessage.term
       self.transition()
 
-    self.state.handleMessage(servermessage.messageType, servermessage.serializedMessage)
+    self.state.handleMessage(servermessage.messageType, servermessage.serializedMessage, self.termNumber)
 
