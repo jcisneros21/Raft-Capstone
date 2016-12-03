@@ -6,7 +6,7 @@ import subprocess
 import re
 
 class server:
-    def __init__(self, callback, port):
+    def __init__(self, callback):
         self.nodeaddrs = []
 
         # figure out who we need to listen for
@@ -14,12 +14,12 @@ class server:
 
         for line in nodeaddrsfile:
             hostaddr = line.split(',')[0]
+            print(hostaddr)
             socketnum = int(line.split(',')[1].strip('\n'))
-            #if hostaddr == self.getownip():
-            self.addr = ("0.0.0.0", port)
-            #else:
-            if socketnum != port:
-                self.nodeaddrs.append(('0.0.0.0', socketnum))
+            if hostaddr == self.getownip():
+                self.addr = (hostaddr, socketnum)
+            else:
+                self.nodeaddrs.append((hostaddr, socketnum))
 
         nodeaddrsfile.close()
         self.listenThread = None
@@ -67,12 +67,12 @@ class server:
         message.fromNode.append(self.addr[0])
         message.fromNode.append(str(self.addr[1]))
         messagetosend = protoc.WrapperMessage()
-        messagetosend.messageType = messageType
-        if messageType == "RequestVote":
+        messagetosend.type = messageType
+        if messageType == protoc.REQUESTVOTE:
           for server in self.nodeaddrs:
             message.toNode.append(server[0])
             message.toNode.append(str(server[1]))
-            messagetosend.serializedMessage = message.SerializeToString()
+            messagetosend.rvm.CopyFrom(message)
             #print("Sending:")
             #print(message)
             #print()
@@ -84,9 +84,9 @@ class server:
             
     def getownip(self):
         result = subprocess.check_output(['ifconfig'], universal_newlines=True)
-        ips = re.findall('inet[ addr]*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}', result)
+        ips = re.findall('10\.0\.0\.[0-9]{1,3}', result)
         #print(ips[0][5:14])
-        return ips[0][5:14]
+        return ips[0]
         #for i in range(len(ips)):
         #    if ips[i][10:12] == '10':
         #        return ips[i][10:]

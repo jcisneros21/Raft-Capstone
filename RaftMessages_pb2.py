@@ -3,6 +3,7 @@
 
 import sys
 _b=sys.version_info[0]<3 and (lambda x:x) or (lambda x:x.encode('latin1'))
+from google.protobuf.internal import enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
@@ -19,10 +20,40 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='RaftMessages.proto',
   package='Raft',
   syntax='proto3',
-  serialized_pb=_b('\n\x12RaftMessages.proto\x12\x04Raft\"h\n\x0bRequestVote\x12\x10\n\x08\x66romNode\x18\x01 \x03(\t\x12\x0e\n\x06toNode\x18\x02 \x03(\t\x12\x0c\n\x04term\x18\x03 \x01(\x05\x12\x14\n\x0clastLogIndex\x18\x04 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x05 \x01(\x05\"M\n\nVoteResult\x12\x10\n\x08\x66romNode\x18\x01 \x03(\t\x12\x0e\n\x06toNode\x18\x02 \x03(\t\x12\x0c\n\x04term\x18\x03 \x01(\x05\x12\x0f\n\x07granted\x18\x04 \x01(\x08\"@\n\x0eWrapperMessage\x12\x13\n\x0bmessageType\x18\x01 \x01(\t\x12\x19\n\x11serializedMessage\x18\x02 \x01(\x0c\x62\x06proto3')
+  serialized_pb=_b('\n\x12RaftMessages.proto\x12\x04Raft\"h\n\x0bRequestVote\x12\x10\n\x08\x66romNode\x18\x01 \x03(\t\x12\x0e\n\x06toNode\x18\x02 \x03(\t\x12\x0c\n\x04term\x18\x03 \x01(\x05\x12\x14\n\x0clastLogIndex\x18\x04 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x05 \x01(\x05\"M\n\nVoteResult\x12\x10\n\x08\x66romNode\x18\x01 \x03(\t\x12\x0e\n\x06toNode\x18\x02 \x03(\t\x12\x0c\n\x04term\x18\x03 \x01(\x05\x12\x0f\n\x07granted\x18\x04 \x01(\x08\"p\n\x0eWrapperMessage\x12\x1f\n\x04type\x18\x01 \x01(\x0e\x32\x11.Raft.MessageType\x12\x1e\n\x03rvm\x18\x02 \x01(\x0b\x32\x11.Raft.RequestVote\x12\x1d\n\x03vrm\x18\x03 \x01(\x0b\x32\x10.Raft.VoteResult*A\n\x0bMessageType\x12\x0f\n\x0bREQUESTVOTE\x10\x00\x12\x0e\n\nVOTERESULT\x10\x01\x12\x11\n\rAPPENDENTRIES\x10\x03\x62\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
+_MESSAGETYPE = _descriptor.EnumDescriptor(
+  name='MessageType',
+  full_name='Raft.MessageType',
+  filename=None,
+  file=DESCRIPTOR,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='REQUESTVOTE', index=0, number=0,
+      options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='VOTERESULT', index=1, number=1,
+      options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='APPENDENTRIES', index=2, number=3,
+      options=None,
+      type=None),
+  ],
+  containing_type=None,
+  options=None,
+  serialized_start=327,
+  serialized_end=392,
+)
+_sym_db.RegisterEnumDescriptor(_MESSAGETYPE)
+
+MessageType = enum_type_wrapper.EnumTypeWrapper(_MESSAGETYPE)
+REQUESTVOTE = 0
+VOTERESULT = 1
+APPENDENTRIES = 3
 
 
 
@@ -145,16 +176,23 @@ _WRAPPERMESSAGE = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='messageType', full_name='Raft.WrapperMessage.messageType', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='type', full_name='Raft.WrapperMessage.type', index=0,
+      number=1, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='serializedMessage', full_name='Raft.WrapperMessage.serializedMessage', index=1,
-      number=2, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b(""),
+      name='rvm', full_name='Raft.WrapperMessage.rvm', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='vrm', full_name='Raft.WrapperMessage.vrm', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -171,12 +209,16 @@ _WRAPPERMESSAGE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=213,
-  serialized_end=277,
+  serialized_end=325,
 )
 
+_WRAPPERMESSAGE.fields_by_name['type'].enum_type = _MESSAGETYPE
+_WRAPPERMESSAGE.fields_by_name['rvm'].message_type = _REQUESTVOTE
+_WRAPPERMESSAGE.fields_by_name['vrm'].message_type = _VOTERESULT
 DESCRIPTOR.message_types_by_name['RequestVote'] = _REQUESTVOTE
 DESCRIPTOR.message_types_by_name['VoteResult'] = _VOTERESULT
 DESCRIPTOR.message_types_by_name['WrapperMessage'] = _WRAPPERMESSAGE
+DESCRIPTOR.enum_types_by_name['MessageType'] = _MESSAGETYPE
 
 RequestVote = _reflection.GeneratedProtocolMessageType('RequestVote', (_message.Message,), dict(
   DESCRIPTOR = _REQUESTVOTE,

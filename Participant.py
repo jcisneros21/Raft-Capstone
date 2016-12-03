@@ -5,11 +5,11 @@ from State import *
 import RaftMessages_pb2 as protoc
 
 class Participant:
-  def __init__(self, port):
+  def __init__(self):
     self.termNumber = 0
     self.numNodes = 0
 
-    self.server = server.server(self.handleMessage, port)
+    self.server = server.server(self.handleMessage)
     self.server.start()
 
     self.state = FollowerState(0, self.server)
@@ -70,16 +70,19 @@ class Participant:
     servermessage.ParseFromString(incomingMessage)
 
     innermessage = None
-    if servermessage.messageType == "RequestVote":
+    if servermessage.type == protoc.REQUESTVOTE:
       innermessage = protoc.RequestVote()
-      innermessage.ParseFromString(servermessage.serializedMessage)
-    elif servermessage.messageType == "AppendEntries":
-      innermessage = protoc.AppendEntries()
-      innermessage.ParseFromString(servermessage.serializedMessage)
+      innermessage = servermessage.rvm
+    elif servermessage.type == protoc.VOTERESULT:
+      innermessage = protoc.VoteResult()
+      innermessage = servermessge.vrm
+    #elif servermessage.type == protoc..APPENDENTRIES:
+      #innermessage = protoc.AppendEntries()
+      #innermessage.ParseFromString(servermessage.serializedMessage)
 
     if innermessage.term > self.termNumber:
       self.termNumber = innermessage.term
       self.transition()
 
-    self.state.handleMessage(servermessage.messageType, servermessage.serializedMessage, self.termNumber)
+    self.state.handleMessage(servermessage.type, innermessage, self.termNumber)
 

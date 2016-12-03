@@ -2,6 +2,12 @@ syntax = "proto3";
 
 package Raft;
 
+enum MessageType {
+  REQUESTVOTE = 0;
+  VOTERESULT = 1;
+  APPENDENTRIES = 3;
+}
+
 message RequestVote {
   repeated string fromNode = 1;
   repeated string toNode = 2;
@@ -18,7 +24,9 @@ message VoteResult {
 };
 
 message WrapperMessage {
-  string messageType = 1;
-  bytes serializedMessage = 2;
+  MessageType type = 1;
+  RequestVote rvm = 2;
+  VoteResult vrm = 3;
+  //AppendEntries am = 4;
 };
 

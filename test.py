@@ -3,6 +3,6 @@ import State
 import sys
 
 def main():
-  test = Participant(int(sys.argv[1]))
+  test = Participant()
 
 main()
