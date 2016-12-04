@@ -8,19 +8,19 @@ class State():
 
   def sendVoteNACK(self, toNode, termNumber):
     voteack = protoc.VoteResult()
-    voteack.toNode.add(toNode[0])
-    voteack.toNode.add(toNode[1])
+    voteack.toNode.append(toNode[0])
+    voteack.toNode.append(toNode[1])
     voteack.term = termNumber
     voteack.granted = False
-    self.server.talk("VoteResult", voteack)
+    self.server.talk(protoc.VOTERESULT, voteack)
 
   def sendVoteACK(self, toNode, termNumber):
     voteack = protoc.VoteResult()
-    voteack.toNode.add(toNode[0])
-    voteack.toNode.add(toNode[1])
+    voteack.toNode.append(toNode[0])
+    voteack.toNode.append(toNode[1])
     voteack.term = termNumber
     voteack.granted = True
-    self.server.talk("VoteResult", voteack)
+    self.server.talk(protoc.VOTERESULT, voteack)
 
 class LeaderState(State):
   def __init__(self, termNumber, server):
@@ -44,24 +44,18 @@ class CandidateState(State):
     print("Stopping candidate state.")
 
   def handleMessage(self, messageType, message, termNumber):
-    message = None
-    if messageType == "RequestVote":
-      message = protoc.RequestVote()
-      message.ParseFromString(message)
-      sendVoteNACK(message.fromNode, termNumber)
+    if messageType == protoc.REQUESTVOTE:
+      self.sendVoteNACK(message.fromNode, termNumber)
     elif messageType == "AppendEntries":
       #TODO: implement this
       pass
-    elif messageType == "VoteResult":
-      message = protoc.VoteResult()
-      message.ParseFromString(message)
+    elif messageType == protoc.VOTERESULT:
       if message.granted:
         votes += 1
 
   def requestVotes(self):
     message = protoc.RequestVote()
-    message.term = self.termNumber
-    self.server.talk("RequestVote", message)
+    self.server.talk(protoc.REQUESTVOTE, message)
 
 class FollowerState(State):
   def __init__(self, termNumber, server):
@@ -73,10 +67,7 @@ class FollowerState(State):
     print("Stopping follower state.")
     
   def handleMessage(self, messageType, message, termNumber):
-    message = None
-    if messageType == "RequestVote":
-      message = protoc.RequestVote()
-      message.ParseFromString(message)
+    if messageType == protoc.REQUESTVOTE:
       if self.voted:
         self.sendVoteNACK(message.fromNode, termNumber)
       else:
