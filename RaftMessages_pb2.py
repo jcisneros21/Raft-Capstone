@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='RaftMessages.proto',
   package='Raft',
   syntax='proto3',
-  serialized_pb=_b('\n\x12RaftMessages.proto\x12\x04Raft\"h\n\x0bRequestVote\x12\x10\n\x08\x66romNode\x18\x01 \x03(\t\x12\x0e\n\x06toNode\x18\x02 \x03(\t\x12\x0c\n\x04term\x18\x03 \x01(\x05\x12\x14\n\x0clastLogIndex\x18\x04 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x05 \x01(\x05\"M\n\nVoteResult\x12\x10\n\x08\x66romNode\x18\x01 \x03(\t\x12\x0e\n\x06toNode\x18\x02 \x03(\t\x12\x0c\n\x04term\x18\x03 \x01(\x05\x12\x0f\n\x07granted\x18\x04 \x01(\x08\"p\n\x0eWrapperMessage\x12\x1f\n\x04type\x18\x01 \x01(\x0e\x32\x11.Raft.MessageType\x12\x1e\n\x03rvm\x18\x02 \x01(\x0b\x32\x11.Raft.RequestVote\x12\x1d\n\x03vrm\x18\x03 \x01(\x0b\x32\x10.Raft.VoteResult*A\n\x0bMessageType\x12\x0f\n\x0bREQUESTVOTE\x10\x00\x12\x0e\n\nVOTERESULT\x10\x01\x12\x11\n\rAPPENDENTRIES\x10\x03\x62\x06proto3')
+  serialized_pb=_b('\n\x12RaftMessages.proto\x12\x04Raft\"\x8a\x01\n\x0bRequestVote\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x14\n\x0clastLogIndex\x18\x06 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x07 \x01(\x05\"o\n\nVoteResult\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07granted\x18\x06 \x01(\x08\"a\n\rAppendEntries\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\"p\n\x0b\x41ppendReply\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07success\x18\x06 \x01(\x08\"\xb2\x01\n\x0eWrapperMessage\x12\x1f\n\x04type\x18\x01 \x01(\x0e\x32\x11.Raft.MessageType\x12\x1e\n\x03rvm\x18\x02 \x01(\x0b\x32\x11.Raft.RequestVote\x12\x1d\n\x03vrm\x18\x03 \x01(\x0b\x32\x10.Raft.VoteResult\x12 \n\x03\x61\x65m\x18\x04 \x01(\x0b\x32\x13.Raft.AppendEntries\x12\x1e\n\x03\x61rm\x18\x05 \x01(\x0b\x32\x11.Raft.AppendReply*R\n\x0bMessageType\x12\x0f\n\x0bREQUESTVOTE\x10\x00\x12\x0e\n\nVOTERESULT\x10\x01\x12\x11\n\rAPPENDENTRIES\x10\x03\x12\x0f\n\x0b\x41PPENDREPLY\x10\x04\x62\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -42,11 +42,15 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
       name='APPENDENTRIES', index=2, number=3,
       options=None,
       type=None),
+    _descriptor.EnumValueDescriptor(
+      name='APPENDREPLY', index=3, number=4,
+      options=None,
+      type=None),
   ],
   containing_type=None,
   options=None,
-  serialized_start=327,
-  serialized_end=392,
+  serialized_start=676,
+  serialized_end=758,
 )
 _sym_db.RegisterEnumDescriptor(_MESSAGETYPE)
 
@@ -54,6 +58,7 @@ MessageType = enum_type_wrapper.EnumTypeWrapper(_MESSAGETYPE)
 REQUESTVOTE = 0
 VOTERESULT = 1
 APPENDENTRIES = 3
+APPENDREPLY = 4
 
 
 
@@ -65,35 +70,174 @@ _REQUESTVOTE = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='fromNode', full_name='Raft.RequestVote.fromNode', index=0,
-      number=1, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
+      name='fromAddr', full_name='Raft.RequestVote.fromAddr', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='toNode', full_name='Raft.RequestVote.toNode', index=1,
-      number=2, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='term', full_name='Raft.RequestVote.term', index=2,
-      number=3, type=5, cpp_type=1, label=1,
+      name='fromPort', full_name='Raft.RequestVote.fromPort', index=1,
+      number=2, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='lastLogIndex', full_name='Raft.RequestVote.lastLogIndex', index=3,
+      name='toAddr', full_name='Raft.RequestVote.toAddr', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='toPort', full_name='Raft.RequestVote.toPort', index=3,
       number=4, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='lastLogTerm', full_name='Raft.RequestVote.lastLogTerm', index=4,
+      name='term', full_name='Raft.RequestVote.term', index=4,
+      number=5, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='lastLogIndex', full_name='Raft.RequestVote.lastLogIndex', index=5,
+      number=6, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='lastLogTerm', full_name='Raft.RequestVote.lastLogTerm', index=6,
+      number=7, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=29,
+  serialized_end=167,
+)
+
+
+_VOTERESULT = _descriptor.Descriptor(
+  name='VoteResult',
+  full_name='Raft.VoteResult',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='fromAddr', full_name='Raft.VoteResult.fromAddr', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='fromPort', full_name='Raft.VoteResult.fromPort', index=1,
+      number=2, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='toAddr', full_name='Raft.VoteResult.toAddr', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='toPort', full_name='Raft.VoteResult.toPort', index=3,
+      number=4, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='term', full_name='Raft.VoteResult.term', index=4,
+      number=5, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='granted', full_name='Raft.VoteResult.granted', index=5,
+      number=6, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=169,
+  serialized_end=280,
+)
+
+
+_APPENDENTRIES = _descriptor.Descriptor(
+  name='AppendEntries',
+  full_name='Raft.AppendEntries',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='fromAddr', full_name='Raft.AppendEntries.fromAddr', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='fromPort', full_name='Raft.AppendEntries.fromPort', index=1,
+      number=2, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='toAddr', full_name='Raft.AppendEntries.toAddr', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='toPort', full_name='Raft.AppendEntries.toPort', index=3,
+      number=4, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='term', full_name='Raft.AppendEntries.term', index=4,
       number=5, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -111,42 +255,56 @@ _REQUESTVOTE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=28,
-  serialized_end=132,
+  serialized_start=282,
+  serialized_end=379,
 )
 
 
-_VOTERESULT = _descriptor.Descriptor(
-  name='VoteResult',
-  full_name='Raft.VoteResult',
+_APPENDREPLY = _descriptor.Descriptor(
+  name='AppendReply',
+  full_name='Raft.AppendReply',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='fromNode', full_name='Raft.VoteResult.fromNode', index=0,
-      number=1, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
+      name='fromAddr', full_name='Raft.AppendReply.fromAddr', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='toNode', full_name='Raft.VoteResult.toNode', index=1,
-      number=2, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='term', full_name='Raft.VoteResult.term', index=2,
-      number=3, type=5, cpp_type=1, label=1,
+      name='fromPort', full_name='Raft.AppendReply.fromPort', index=1,
+      number=2, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='granted', full_name='Raft.VoteResult.granted', index=3,
-      number=4, type=8, cpp_type=7, label=1,
+      name='toAddr', full_name='Raft.AppendReply.toAddr', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='toPort', full_name='Raft.AppendReply.toPort', index=3,
+      number=4, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='term', full_name='Raft.AppendReply.term', index=4,
+      number=5, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='success', full_name='Raft.AppendReply.success', index=5,
+      number=6, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -163,8 +321,8 @@ _VOTERESULT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=134,
-  serialized_end=211,
+  serialized_start=381,
+  serialized_end=493,
 )
 
 
@@ -196,6 +354,20 @@ _WRAPPERMESSAGE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='aem', full_name='Raft.WrapperMessage.aem', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='arm', full_name='Raft.WrapperMessage.arm', index=4,
+      number=5, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -208,15 +380,19 @@ _WRAPPERMESSAGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=213,
-  serialized_end=325,
+  serialized_start=496,
+  serialized_end=674,
 )
 
 _WRAPPERMESSAGE.fields_by_name['type'].enum_type = _MESSAGETYPE
 _WRAPPERMESSAGE.fields_by_name['rvm'].message_type = _REQUESTVOTE
 _WRAPPERMESSAGE.fields_by_name['vrm'].message_type = _VOTERESULT
+_WRAPPERMESSAGE.fields_by_name['aem'].message_type = _APPENDENTRIES
+_WRAPPERMESSAGE.fields_by_name['arm'].message_type = _APPENDREPLY
 DESCRIPTOR.message_types_by_name['RequestVote'] = _REQUESTVOTE
 DESCRIPTOR.message_types_by_name['VoteResult'] = _VOTERESULT
+DESCRIPTOR.message_types_by_name['AppendEntries'] = _APPENDENTRIES
+DESCRIPTOR.message_types_by_name['AppendReply'] = _APPENDREPLY
 DESCRIPTOR.message_types_by_name['WrapperMessage'] = _WRAPPERMESSAGE
 DESCRIPTOR.enum_types_by_name['MessageType'] = _MESSAGETYPE
 
@@ -233,6 +409,20 @@ VoteResult = _reflection.GeneratedProtocolMessageType('VoteResult', (_message.Me
   # @@protoc_insertion_point(class_scope:Raft.VoteResult)
   ))
 _sym_db.RegisterMessage(VoteResult)
+
+AppendEntries = _reflection.GeneratedProtocolMessageType('AppendEntries', (_message.Message,), dict(
+  DESCRIPTOR = _APPENDENTRIES,
+  __module__ = 'RaftMessages_pb2'
+  # @@protoc_insertion_point(class_scope:Raft.AppendEntries)
+  ))
+_sym_db.RegisterMessage(AppendEntries)
+
+AppendReply = _reflection.GeneratedProtocolMessageType('AppendReply', (_message.Message,), dict(
+  DESCRIPTOR = _APPENDREPLY,
+  __module__ = 'RaftMessages_pb2'
+  # @@protoc_insertion_point(class_scope:Raft.AppendReply)
+  ))
+_sym_db.RegisterMessage(AppendReply)
 
 WrapperMessage = _reflection.GeneratedProtocolMessageType('WrapperMessage', (_message.Message,), dict(
   DESCRIPTOR = _WRAPPERMESSAGE,

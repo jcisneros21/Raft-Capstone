@@ -6,27 +6,57 @@ enum MessageType {
   REQUESTVOTE = 0;
   VOTERESULT = 1;
   APPENDENTRIES = 3;
+  APPENDREPLY = 4;
 }
 
+/*message Addresses {
+  string fromAddr = 1;
+  int32 fromPort = 2;
+  string toAddr = 3;
+  int32 toPort = 4;
+}*/
+
 message RequestVote {
-  repeated string fromNode = 1;
-  repeated string toNode = 2;
-  int32 term = 3;
-  int32 lastLogIndex = 4;
-  int32 lastLogTerm = 5;
+  string fromAddr = 1;
+  int32 fromPort = 2;
+  string toAddr = 3;
+  int32 toPort = 4;
+  int32 term = 5;
+  int32 lastLogIndex = 6;
+  int32 lastLogTerm = 7;
 };
 
 message VoteResult {
-  repeated string fromNode = 1;
-  repeated string toNode = 2;
-  int32 term = 3;
-  bool granted = 4;
+  string fromAddr = 1;
+  int32 fromPort = 2;
+  string toAddr = 3;
+  int32 toPort = 4;
+  int32 term = 5;
+  bool granted = 6;
+};
+
+message AppendEntries {
+  string fromAddr = 1;
+  int32 fromPort = 2;
+  string toAddr = 3;
+  int32 toPort = 4;
+  int32 term = 5;
+};
+
+message AppendReply {
+  string fromAddr = 1;
+  int32 fromPort = 2;
+  string toAddr = 3;
+  int32 toPort = 4;
+  int32 term = 5;
+  bool success = 6;
 };
 
 message WrapperMessage {
   MessageType type = 1;
   RequestVote rvm = 2;
   VoteResult vrm = 3;
-  //AppendEntries am = 4;
+  AppendEntries aem = 4;
+  AppendReply arm = 5;
 };
 

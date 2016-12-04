@@ -3,14 +3,16 @@ import random
 import threading
 from State import *
 import RaftMessages_pb2 as protoc
+import os
 
 class Participant:
   def __init__(self):
     self.termNumber = 0
-    self.numNodes = 0
 
     self.server = server.server(self.handleMessage)
     self.server.start()
+
+    self.numNodes = len(self.server.nodeaddrs) + 1
 
     self.state = FollowerState(0, self.server)
     self.timer = None
@@ -26,7 +28,7 @@ class Participant:
     return isinstance(self.state, LeaderState)
 
   def selectTimeout(self):
-    return random.uniform(0.150, 0.300)
+    return random.uniform(3, 10)
 
   def initTimer(self):
     self.electionTimeout = self.selectTimeout()
@@ -48,12 +50,16 @@ class Participant:
         self.state = FollowerState(self.termNumber, self.server)
         self.initTimer()
     elif self.isCandidate():
-      if not fromTimer or self.state.heardFromLeader:
+      #print("We have {} votes".format(self.state.votes))
+      if self.state.heardFromLeader and not fromTimer:
         self.state.stop()
         self.state = FollowerState(self.termNumber, self.server)
         self.initTimer()
       elif self.state.votes > (self.numNodes / 2):
         self.state.stop()
+        print("FRKLWGNJWRK:NGK:JRNFJK:WENFK:JNEWJK:FNWJKFJHWBGIWGB"*100)
+        print("We won!")
+        print()
         self.state = LeaderState(self.termNumber, self.server)
       elif not self.state.heardFromLeader:
         self.state.stop()
@@ -65,24 +71,34 @@ class Participant:
       self.initTimer()
 
   def handleMessage(self, incomingMessage):
-    print("Handling message")
     servermessage = protoc.WrapperMessage()
     servermessage.ParseFromString(incomingMessage)
 
     innermessage = None
+    print(servermessage.type)
+    print()
     if servermessage.type == protoc.REQUESTVOTE:
       innermessage = protoc.RequestVote()
       innermessage = servermessage.rvm
     elif servermessage.type == protoc.VOTERESULT:
       innermessage = protoc.VoteResult()
-      innermessage = servermessge.vrm
-    #elif servermessage.type == protoc..APPENDENTRIES:
-      #innermessage = protoc.AppendEntries()
-      #innermessage.ParseFromString(servermessage.serializedMessage)
+      innermessage = servermessage.vrm
+    elif servermessage.type == protoc.APPENDENTRIES:
+      innermessage = protoc.AppendEntries()
+      innermessage = servermessage.aem
+    elif servermessage.type == protoc.APPENDREPLY:
+      innermessage = protoc.AppendReply()
+      innermessage = servermessage.arm
 
     if innermessage.term > self.termNumber:
       self.termNumber = innermessage.term
       self.transition()
 
     self.state.handleMessage(servermessage.type, innermessage, self.termNumber)
+    
+    if self.isCandidate():
+      if self.state.votes > (self.numNodes / 2):
+        self.transition()
+      elif self.state.heardFromLeader:
+        self.transition()
 
