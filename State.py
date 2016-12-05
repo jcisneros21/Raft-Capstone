@@ -1,4 +1,5 @@
 import server
+import threading
 import RaftMessages_pb2 as protoc
 
 class State():
@@ -43,17 +44,19 @@ class LeaderState(State):
     State.__init__(self, termNumber, server)
     self.sendHeartbeat()
     self.heartbeat = 2  # interval between heartbeat messages (this must be less than election timout lower bound)
-    
+    self.initTimer()
+  
   def initTimer(self):
-    self.timer = threading.Timer(self.heartbeat, self.sendHeartbeat)
+    self.timer = threading.Timer(2, self.sendHeartbeat)
     self.timer.start()
 
   def sendHeartbeat(self):
     message = protoc.AppendEntries()
     self.server.talk(protoc.APPENDENTRIES, message)
+    self.initTimer()
 
   def handleMessage(self, messageType, message, termNumber):
-    pass
+    print("Message In!")
 
   def stop(self):
     pass
@@ -90,6 +93,7 @@ class FollowerState(State):
   def __init__(self, termNumber, server):
     State.__init__(self, termNumber, server)
     self.voted = False
+    self.heardFromLeader = False
 
   def stop(self):
     pass
@@ -107,4 +111,4 @@ class FollowerState(State):
         self.replyAENACK(message.fromAddr, message.fromPort, termNumber)
       else:
         self.replyAEACK(message.fromAddr, message.fromPort, termNumber)
-
+        self.heardFromLeader = True
