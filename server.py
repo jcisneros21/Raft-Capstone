@@ -57,6 +57,8 @@ class server:
           return
         elif messageType == protoc.VOTERESULT:
             messagetosend.vrm.CopyFrom(message)
+        elif messageType == protoc.APPENDREPLY:
+            messagetosend.arm.CopyFrom(message)
 
         self.socket.sendto(messagetosend.SerializeToString(), (message.toAddr, message.toPort))
             

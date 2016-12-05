@@ -36,7 +36,8 @@ class Participant:
     self.timer.start()
 
   def transition(self, fromTimer=False):
-    self.termNumber += 1
+    #self.termNumber += 1
+    self.timer.cancel()
     # if we have called transition and the election timer is still alive then we know
     # we heard from someone with a higher term number than us so immediately transition
     # to follower
@@ -52,10 +53,12 @@ class Participant:
     elif self.isCandidate():
       #print("We have {} votes".format(self.state.votes))
       if self.state.heardFromLeader and not fromTimer:
+        print("Changing to follower")
         self.state.stop()
         self.state = FollowerState(self.termNumber, self.server)
         self.initTimer()
       elif self.state.votes > (self.numNodes / 2):
+        self.termNumber += 1
         self.state.stop()
         print("FRKLWGNJWRK:NGK:JRNFJK:WENFK:JNEWJK:FNWJKFJHWBGIWGB"*100)
         print("We won!")
@@ -92,7 +95,7 @@ class Participant:
 
     if innermessage.term > self.termNumber:
       self.termNumber = innermessage.term
-      self.transition()
+      #self.transition()
 
     self.state.handleMessage(servermessage.type, innermessage, self.termNumber)
     
@@ -101,4 +104,11 @@ class Participant:
         self.transition()
       elif self.state.heardFromLeader:
         self.transition()
+        self.state.heardFromLeader = False
 
+    if self.isFollower():
+      print("I am a follower")
+      if self.state.heardFromLeader:
+        self.timer.cancel()
+        self.initTimer()
+        self.state.heardFromLeader = False
