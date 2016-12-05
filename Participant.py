@@ -28,7 +28,7 @@ class Participant:
     return isinstance(self.state, LeaderState)
 
   def selectTimeout(self):
-    return random.uniform(3, 10)
+    return random.uniform(3,5)
 
   def initTimer(self):
     self.electionTimeout = self.selectTimeout()
@@ -43,6 +43,7 @@ class Participant:
     # to follower
     if self.isFollower():
       if fromTimer:
+        self.termNumber += 1
         self.state.stop()
         self.state = CandidateState(self.termNumber, self.server)
         self.initTimer()
@@ -53,16 +54,12 @@ class Participant:
     elif self.isCandidate():
       #print("We have {} votes".format(self.state.votes))
       if self.state.heardFromLeader and not fromTimer:
-        print("Changing to follower")
         self.state.stop()
         self.state = FollowerState(self.termNumber, self.server)
         self.initTimer()
       elif self.state.votes > (self.numNodes / 2):
-        self.termNumber += 1
+        #self.termNumber += 1
         self.state.stop()
-        print("FRKLWGNJWRK:NGK:JRNFJK:WENFK:JNEWJK:FNWJKFJHWBGIWGB"*100)
-        print("We won!")
-        print()
         self.state = LeaderState(self.termNumber, self.server)
       elif not self.state.heardFromLeader:
         self.state.stop()
@@ -100,15 +97,17 @@ class Participant:
     self.state.handleMessage(servermessage.type, innermessage, self.termNumber)
     
     if self.isCandidate():
+      print("I am Candidate")
       if self.state.votes > (self.numNodes / 2):
         self.transition()
       elif self.state.heardFromLeader:
         self.transition()
         self.state.heardFromLeader = False
-
-    if self.isFollower():
-      print("I am a follower")
+    elif self.isFollower():
+      print("I am Follower")
       if self.state.heardFromLeader:
         self.timer.cancel()
         self.initTimer()
         self.state.heardFromLeader = False
+    elif self.isLeader():
+      print("I am Leader")

@@ -2,6 +2,7 @@ import threading
 import socket
 import RaftMessages_pb2 as protoc
 import sys
+import time
 import subprocess
 import re
 
@@ -35,12 +36,14 @@ class server:
         while True:
             data = self.socket.recv(1024)
             self.participantCallback(data)
+            print("Recieving Message")
 
     def talk(self, messageType, message):
         message.fromAddr = self.addr[0]
         message.fromPort = self.addr[1]
         messagetosend = protoc.WrapperMessage()
         messagetosend.type = messageType
+        print("Sending Message")
         if messageType == protoc.REQUESTVOTE:
           for server in self.nodeaddrs:
             message.toAddr = server[0]

@@ -47,7 +47,7 @@ class LeaderState(State):
     self.initTimer()
   
   def initTimer(self):
-    self.timer = threading.Timer(2, self.sendHeartbeat)
+    self.timer = threading.Timer(1, self.sendHeartbeat)
     self.timer.start()
 
   def sendHeartbeat(self):
@@ -112,3 +112,4 @@ class FollowerState(State):
       else:
         self.replyAEACK(message.fromAddr, message.fromPort, termNumber)
         self.heardFromLeader = True
+        self.voted = False
