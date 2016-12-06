@@ -8,6 +8,7 @@ class State():
     self.server = server
 
   def sendVoteNACK(self, toAddr, toPort, termNumber):
+    print("Send VoteReply NACK to ", end="")
     voteack = protoc.VoteResult()
     voteack.toAddr = toAddr
     voteack.toPort = toPort
@@ -16,6 +17,7 @@ class State():
     self.server.talk(protoc.VOTERESULT, voteack)
 
   def sendVoteACK(self, toAddr, toPort, termNumber):
+    print("Send VoteResult ACK to ", end="")
     voteack = protoc.VoteResult()
     voteack.toAddr = toAddr
     voteack.toPort = toPort
@@ -24,6 +26,7 @@ class State():
     self.server.talk(protoc.VOTERESULT, voteack)
 
   def replyAENACK(self, toAddr, toPort, termNumber):
+    print("Send AppendReply NACK to ", end="")
     message = protoc.AppendReply()
     message.toAddr = toAddr
     message.toPort = toPort
@@ -32,6 +35,7 @@ class State():
     self.server.talk(protoc.APPENDREPLY, message)
 
   def replyAEACK(self, toAddr, toPort, termNumber):
+    print("Send AppendReply ACK to ", end="")
     message = protoc.AppendReply()
     message.toAddr = toAddr
     message.toPort = toPort
@@ -44,19 +48,20 @@ class LeaderState(State):
     State.__init__(self, termNumber, server)
     self.sendHeartbeat()
     self.heartbeat = 2  # interval between heartbeat messages (this must be less than election timout lower bound)
-    self.initTimer()
+    #self.initTimer()
   
   def initTimer(self):
-    self.timer = threading.Timer(1, self.sendHeartbeat)
+    self.timer = threading.Timer(4, self.sendHeartbeat)
     self.timer.start()
 
   def sendHeartbeat(self):
+    #print("Sending HeartBeats")
     message = protoc.AppendEntries()
     self.server.talk(protoc.APPENDENTRIES, message)
     self.initTimer()
 
   def handleMessage(self, messageType, message, termNumber):
-    print("Message In!")
+    print("")
 
   def stop(self):
     pass
@@ -82,8 +87,7 @@ class CandidateState(State):
     elif messageType == protoc.VOTERESULT:
       if message.granted:
         self.votes += 1
-      print("We have {} votes".format(self.votes))
-      print()
+        print("We have {} votes".format(self.votes))
 
   def requestVotes(self):
     message = protoc.RequestVote()

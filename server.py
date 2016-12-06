@@ -36,16 +36,18 @@ class server:
         while True:
             data = self.socket.recv(1024)
             self.participantCallback(data)
-            print("Recieving Message")
+            #print("Recieving Message")
 
     def talk(self, messageType, message):
         message.fromAddr = self.addr[0]
         message.fromPort = self.addr[1]
         messagetosend = protoc.WrapperMessage()
         messagetosend.type = messageType
-        print("Sending Message")
+        #print("Sending Message")
         if messageType == protoc.REQUESTVOTE:
           for server in self.nodeaddrs:
+            print("Sending out RequestVote MSG to " + server[0])
+            print("")
             message.toAddr = server[0]
             message.toPort = server[1]
             messagetosend.rvm.CopyFrom(message)
@@ -53,16 +55,23 @@ class server:
           return
         elif messageType == protoc.APPENDENTRIES:
           for server in self.nodeaddrs:
+            print("Sending out AppendEntries MSG to " + server[0])
+            print("")
             message.toAddr = server[0]
             message.toPort = server[1]
             messagetosend.aem.CopyFrom(message)
             self.socket.sendto(messagetosend.SerializeToString(), (message.toAddr, message.toPort))
           return
         elif messageType == protoc.VOTERESULT:
+            print(message.toAddr)
+            print("")
             messagetosend.vrm.CopyFrom(message)
         elif messageType == protoc.APPENDREPLY:
+            print(message.toAddr)
+            print("")
             messagetosend.arm.CopyFrom(message)
 
+        print("")
         self.socket.sendto(messagetosend.SerializeToString(), (message.toAddr, message.toPort))
             
     def getownip(self):
