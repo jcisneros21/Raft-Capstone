@@ -1,119 +1,108 @@
-import server
 import threading
 import RaftMessages_pb2 as protoc
 
 class State():
-  def __init__(self, termNumber, server):
-    self.termNumber = termNumber  
-    self.server = server
-
-  def sendVoteNACK(self, toAddr, toPort, termNumber):
-    print("Send VoteReply NACK to ", end="")
-    voteack = protoc.VoteResult()
-    voteack.toAddr = toAddr
-    voteack.toPort = toPort
-    voteack.term = termNumber
-    voteack.granted = False
-    self.server.talk(protoc.VOTERESULT, voteack)
-
-  def sendVoteACK(self, toAddr, toPort, termNumber):
-    print("Send VoteResult ACK to ", end="")
-    voteack = protoc.VoteResult()
-    voteack.toAddr = toAddr
-    voteack.toPort = toPort
-    voteack.term = termNumber
-    voteack.granted = True
-    self.server.talk(protoc.VOTERESULT, voteack)
+  def __init__(self):
+    self.termNumber = 0 
 
   def replyAENACK(self, toAddr, toPort, termNumber):
-    print("Send AppendReply NACK to ", end="")
     message = protoc.AppendReply()
     message.toAddr = toAddr
     message.toPort = toPort
     message.term = termNumber
     message.success = False
-    self.server.talk(protoc.APPENDREPLY, message)
+    return protoc.APPENDREPLY, message
 
   def replyAEACK(self, toAddr, toPort, termNumber):
-    print("Send AppendReply ACK to ", end="")
     message = protoc.AppendReply()
     message.toAddr = toAddr
     message.toPort = toPort
     message.term = termNumber
     message.success = True
-    self.server.talk(protoc.APPENDREPLY, message)   
+    return protoc.APPENDREPLY, message
+
+  def sendVoteNACK(self, toAddr, toPort, termNumber):
+    voteack = protoc.VoteResult()
+    voteack.toAddr = toAddr
+    voteack.toPort = toPort
+    voteack.term = termNumber
+    voteack.granted = False
+    return protoc.VOTERESULT, voteack
+
+  def sendVoteACK(self, toAddr, toPort, termNumber):
+    voteack = protoc.VoteResult()
+    voteack.toAddr = toAddr
+    voteack.toPort = toPort
+    voteack.term = termNumber
+    voteack.granted = True
+    return protoc.VOTERESULT, voteack
+
 
 class LeaderState(State):
-  def __init__(self, termNumber, server):
-    State.__init__(self, termNumber, server)
+  def __init__(self):
+    State.__init__(self)
+    # Send Heartbeats once transitioned to inform a leader is present
     self.sendHeartbeat()
-    self.heartbeat = 2  # interval between heartbeat messages (this must be less than election timout lower bound)
-    #self.initTimer()
+    # Time interval to send messages in seconds
+    self.heartbeat = 4
+    self.timer = None
   
   def initTimer(self):
-    self.timer = threading.Timer(4, self.sendHeartbeat)
+    self.timer = threading.Timer(self.heartbeat, self.sendHeartbeat)
     self.timer.start()
 
   def sendHeartbeat(self):
-    #print("Sending HeartBeats")
     message = protoc.AppendEntries()
-    self.server.talk(protoc.APPENDENTRIES, message)
     self.initTimer()
+    return protoc.APPENDENTRIES, message
 
+  # TO-DO
   def handleMessage(self, messageType, message, termNumber):
-    print("")
-
-  def stop(self):
     pass
 
+
 class CandidateState(State):
-  def __init__(self, termNumber, server):
-    State.__init__(self, termNumber, server)
-    self.votes = 1   # init this to 1 because each candidate votes for themselves
+  def __init__(self):
+    State.__init__(self)
+    # Candidate has vote for himself
+    self.votes = 1  
     self.heardFromLeader = False
     self.requestVotes()
 
-  def stop(self):
-    pass
-
   def handleMessage(self, messageType, message, termNumber):
     if messageType == protoc.REQUESTVOTE:
-      self.sendVoteNACK(message.fromAddr, message.fromPort, termNumber)
-    elif messageType == protoc.APPENDENTRIES:
-      if message.term < termNumber:
-        self.replyAENACK(message.fromAddr, message.fromPort, termNumber)
-      else:
-        self.heardFromLeader = True
+      return self.sendVoteNACK(message.fromAddr, message.fromPort, termNumber)
     elif messageType == protoc.VOTERESULT:
       if message.granted:
         self.votes += 1
-        print("We have {} votes".format(self.votes))
+    elif messageType == protoc.APPENDENTRIES:
+      if message.term < termNumber:
+        return self.replyAENACK(message.fromAddr, message.fromPort, termNumber)
+      else:
+        # When will this ever happen?
+        self.heardFromLeader = True
 
   def requestVotes(self):
     message = protoc.RequestVote()
-    self.server.talk(protoc.REQUESTVOTE, message)
+    return protoc.REQUESTVOTE, message
+
 
 class FollowerState(State):
-  def __init__(self, termNumber, server):
-    State.__init__(self, termNumber, server)
+  def __init__(self):
+    State.__init__(self)
     self.voted = False
-    self.heardFromLeader = False
-
-  def stop(self):
-    pass
-
   
   def handleMessage(self, messageType, message, termNumber):
+    # If RequestVote Message is Recieved
     if messageType == protoc.REQUESTVOTE:
       if self.voted:
-        self.sendVoteNACK(message.fromAddr, message.fromPort, termNumber)
+        return self.sendVoteNACK(message.fromAddr, message.fromPort, termNumber)
       else:
-        self.sendVoteACK(message.fromAddr, message.fromPort, termNumber)
         self.voted = True
+        return self.sendVoteACK(message.fromAddr, message.fromPort, termNumber)
+    # If AppendEntries Message is Recieved
     elif messageType == protoc.APPENDENTRIES:
       if message.term < termNumber:
-        self.replyAENACK(message.fromAddr, message.fromPort, termNumber)
+        return self.replyAENACK(message.fromAddr, message.fromPort, termNumber)
       else:
-        self.replyAEACK(message.fromAddr, message.fromPort, termNumber)
-        self.heardFromLeader = True
-        self.voted = False
+        return self.replyAEACK(message.fromAddr, message.fromPort, termNumber)
