@@ -5,11 +5,12 @@ import sys
 import subprocess
 import re
 import State
+import random
 
 class Server:
     def __init__(self):
         self.nodeaddrs = []
-        self.StateInfo = State(State.Follower)
+        self.Socket = None
 
         # figure out who we need to listen for
         nodeaddrsfile = open('nodeaddrs.txt', 'r')
@@ -26,18 +27,50 @@ class Server:
 
         nodeaddrsfile.close()
 
-    def __listen(self):
-        listenSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        listenSocket.bind(self.addr)
-        while True:
-            data = listenSocket.recv(1024)
+        self.StateInfo = State.FollowerState()
 
-    def __getownip(self):
+        # init election timer
+        self.electionTimeout = random.uniform(1, 5)
+        self.timer = threading.Timer(self.electionTimeout, self.transition, [True,])
+
+    def listen(self):
+        self.Socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.Socket.bind(self.addr)
+        while True:
+            data = self.Socket.recv(1024)
+            # threading stuff
+
+
+    def getownip(self):
         result = subprocess.check_output(['ifconfig'], universal_newlines=True)
         ips = re.findall('10\.0\.0\.[0-9]{1,3}', result)
         return ips[0]
 
-    def handleMessage(self, messageData):
+    def isFollower(self):
+        return isinstance(self.StateInfo, State.FollowerState)
+
+    def isCandidate(self):
+        return isinstance(self.StateInfo, State.CandidateState)
+
+    def isLeader(self):
+        return isinstance(self.StateInfo, State.LeaderState)
+
+    def sendMessage(self, messageType, message):
+        outgoingMessage = protoc.WrapperMessage()
+        outgoingMessage.type = messageType
+
+        if messageType == protoc.REQUESTVOTE:
+            outgoingMessage.rvm.CopyFrom(message)
+        elif messageType == protoc.VOTERESULT:
+            outgoingMessage.vrm.CopyFrom(message)
+        elif messageType == protoc.APPENDENTRIES:
+            outgoingMessage.aem.CopyFrom(message)
+        elif messageType == protoc.APPENDREPLY:
+            outgoingMessage.arm.CopyFrom(message)
+
+        self.Socket.sendto(outgoingMessage.SerializeToString(), (message.toAddr, message.toPort))
+
+    def messgeHandler(self, messageData):
         # first thing we do is parse the message data
         outerMessage = protoc.WrapperMessage()
         outerMessage.ParseFromString(messageData)
@@ -58,9 +91,11 @@ class Server:
         # for all servers in all states the first thing we need to check is
         # that our term number is not out of date
         if innerMessage.term > self.StateInfo.term:
-            self.StateInfo = State(State.Follower, innerMessage.term)
+            # transition to follower
             return
+        #TODO: Check if commitindex > last applied after we implement logs
 
         # if the term number is valid, the normal rules for the current state
         # apply
-        if ()
+        replyMessageType, replyMessage = self.StateInfo.handleMessage(messageType, message, termNumber)
+        self.sendMessage(replyMessageType, replyMessage)
