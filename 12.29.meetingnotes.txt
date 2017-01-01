@@ -4,4 +4,4 @@
 3) Rename message creation methods so they no longer imply they are actually sending messages
 4) Add functionality to all State constructors to initialize to a term number other
    than 0
-5) Write transition function in Server class, protect state info w/ mutex
+5) Write transition function in Server class, protect state info w/ semaphore

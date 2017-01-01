@@ -9,7 +9,7 @@ import random
 
 class Server:
     def __init__(self):
-        self.nodeaddrs = []
+        self.NodeAddrs = []
         self.Socket = None
 
         # figure out who we need to listen for
@@ -23,15 +23,16 @@ class Server:
             if hostaddr = self.__getownip():
                 self.addr = (hostaddr, socketnum)
             else:
-                self.nodeaddrs.append((hostaddr, socketnum))
+                self.NodeAddrs.append((hostaddr, socketnum))
 
         nodeaddrsfile.close()
 
+        self.StateSemaphore = threading.Semaphore()
         self.StateInfo = State.FollowerState()
 
-        # init election timer
+        # init election timer and transition to CandidateState if it runs out
         self.electionTimeout = random.uniform(1, 5)
-        self.timer = threading.Timer(self.electionTimeout, self.transition, [True,])
+        self.timer = threading.Timer(self.electionTimeout, self.transition)
 
     def listen(self):
         self.Socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -41,10 +42,35 @@ class Server:
             # threading stuff
 
 
+    def selectElectionTimeoutValue(self):
+        self.electionTimeout = random.uniform(1, 5)
+
     def getownip(self):
         result = subprocess.check_output(['ifconfig'], universal_newlines=True)
         ips = re.findall('10\.0\.0\.[0-9]{1,3}', result)
         return ips[0]
+
+    def heartbeat(self):
+        
+
+    def transition(self, state):
+        successfulTransition = False
+        if self.StateSemaphore.aquire(blocking=False):
+            if state == State.FollowerState:
+                self.StateInfo = State.FollowerState()
+                # init new election timer
+                self.selectElectionTimeoutValue()
+                self.timer = threading.Timer(self.electionTimeout, self.transition, [State.CandidateState,])
+            elif state == State.CandidateState:
+                self.StateInfo = State.CandidateState()
+                # init new election timer
+                self.selectElectionTimeoutValue()
+                self.timer = threading.Timer(self.electionTimeout, self.transition, [State.CandidateState,])
+            elif state == State.LeaderState:
+                self.StateInfo = State.LeaderState()
+            self.StateSemaphore.release()
+            successfulTransition = True
+        return successfulTransition
 
     def isFollower(self):
         return isinstance(self.StateInfo, State.FollowerState)
@@ -97,5 +123,5 @@ class Server:
 
         # if the term number is valid, the normal rules for the current state
         # apply
-        replyMessageType, replyMessage = self.StateInfo.handleMessage(messageType, message, termNumber)
+        replyMessageType, replyMessage = self.StateInfo.handleMessage(messageType, message)
         self.sendMessage(replyMessageType, replyMessage)
