@@ -1,8 +1,8 @@
-from Participant import Participant
+import Server
 import State
 import sys
 
 def main():
-  test = Participant()
+  test = Server.Server()
 
 main()

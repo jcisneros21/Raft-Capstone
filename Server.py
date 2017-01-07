@@ -20,7 +20,7 @@ class Server:
             socketnum = int(line.split(',')[1].strip('\n'))
 
             # if we just read our own address from the file
-            if hostaddr = self.__getownip():
+            if hostaddr == self.getownip():
                 self.addr = (hostaddr, socketnum)
             else:
                 self.NodeAddrs.append((hostaddr, socketnum))
@@ -31,43 +31,69 @@ class Server:
         self.StateInfo = State.FollowerState()
 
         # init election timer and transition to CandidateState if it runs out
-        self.electionTimeout = random.uniform(1, 5)
-        self.timer = threading.Timer(self.electionTimeout, self.transition)
+        self.electionTimeout = random.uniform(2, 5)
+        self.timer = threading.Timer(self.electionTimeout, self.transition, ('Candidate',))
+        self.timer.start()
+        self.heartbeatTimeout = 1
+        self.listen()
 
     def listen(self):
         self.Socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.Socket.bind(self.addr)
         while True:
             data = self.Socket.recv(1024)
-            # threading stuff
-
+            print('Starting new thread')
+            threading.Thread(target=self.messageHandler, args=(data,)).start()
 
     def selectElectionTimeoutValue(self):
-        self.electionTimeout = random.uniform(1, 5)
+        self.electionTimeout = random.uniform(2, 5)
 
     def getownip(self):
         result = subprocess.check_output(['ifconfig'], universal_newlines=True)
         ips = re.findall('10\.0\.0\.[0-9]{1,3}', result)
         return ips[0]
 
+    def requestVotes(self):
+        for server in self.NodeAddrs:
+            messageType,message = self.StateInfo.requestVotes()
+            message.toAddr = server[0]
+            message.toPort = server[1]
+            message.fromAddr = self.addr[0]
+            message.fromPort = self.addr[1]
+            self.sendMessage(messageType, message)
+
     def heartbeat(self):
-        
+        for server in self.NodeAddrs:
+            messageType,message = self.StateInfo.sendHeartbeat()
+            message.toAddr = server[0]
+            message.toPort = server[1]
+            message.fromAddr = self.addr[0]
+            message.fromPort = self.addr[1]
+            self.sendMessage(messageType, message)
+        self.timer = threading.Timer(self.heartbeatTimeout, self.heartbeat)
+        self.timer.start()
 
     def transition(self, state):
         successfulTransition = False
-        if self.StateSemaphore.aquire(blocking=False):
-            if state == State.FollowerState:
+        if self.StateSemaphore.acquire(blocking=False):
+            print('Transitioning to ' + state)
+            self.timer.cancel()
+            if state == 'Follower':
                 self.StateInfo = State.FollowerState()
                 # init new election timer
                 self.selectElectionTimeoutValue()
-                self.timer = threading.Timer(self.electionTimeout, self.transition, [State.CandidateState,])
-            elif state == State.CandidateState:
+                self.timer = threading.Timer(self.electionTimeout, self.transition, ['Candidate',])
+                self.timer.start()
+            elif state == 'Candidate':
                 self.StateInfo = State.CandidateState()
+                self.requestVotes()
                 # init new election timer
                 self.selectElectionTimeoutValue()
-                self.timer = threading.Timer(self.electionTimeout, self.transition, [State.CandidateState,])
-            elif state == State.LeaderState:
+                self.timer = threading.Timer(self.electionTimeout, self.transition, ['Candidate',])
+                self.timer.start()
+            elif state == 'Leader':
                 self.StateInfo = State.LeaderState()
+                self.heartbeat()
             self.StateSemaphore.release()
             successfulTransition = True
         return successfulTransition
@@ -82,6 +108,7 @@ class Server:
         return isinstance(self.StateInfo, State.LeaderState)
 
     def sendMessage(self, messageType, message):
+        print('Sending message')
         outgoingMessage = protoc.WrapperMessage()
         outgoingMessage.type = messageType
 
@@ -96,7 +123,7 @@ class Server:
 
         self.Socket.sendto(outgoingMessage.SerializeToString(), (message.toAddr, message.toPort))
 
-    def messgeHandler(self, messageData):
+    def messageHandler(self, messageData):
         # first thing we do is parse the message data
         outerMessage = protoc.WrapperMessage()
         outerMessage.ParseFromString(messageData)
@@ -104,24 +131,34 @@ class Server:
         if outerMessage.type == protoc.REQUESTVOTE:
             innerMessage = protoc.RequestVote()
             innerMessage = outerMessage.rvm
+            messageType = protoc.REQUESTVOTE
         elif outerMessage.type == protoc.VOTERESULT:
             innerMessage = protoc.VoteResult()
             innerMessage = outerMessage.vrm
+            messageType = protoc.VOTERESULT
         elif outerMessage.type == protoc.APPENDENTRIES:
             innerMessage = protoc.AppendEntries()
             innerMessage = outerMessage.aem
+            messageType = protoc.APPENDENTRIES
         elif outerMessage.type == protoc.APPENDREPLY:
             innerMessage = protoc.AppendReply()
             innerMessage = outerMessage.arm
+            messageType = protoc.APPENDREPLY
 
         # for all servers in all states the first thing we need to check is
         # that our term number is not out of date
         if innerMessage.term > self.StateInfo.term:
-            # transition to follower
+            self.transition('Follower')
             return
         #TODO: Check if commitindex > last applied after we implement logs
 
         # if the term number is valid, the normal rules for the current state
         # apply
-        replyMessageType, replyMessage = self.StateInfo.handleMessage(messageType, message)
-        self.sendMessage(replyMessageType, replyMessage)
+        replyMessageType, replyMessage = self.StateInfo.handleMessage(messageType, innerMessage, self.StateInfo.term)
+        if replyMessageType is not None or replyMessage is not None:
+            self.sendMessage(replyMessageType, replyMessage)
+        else:
+            # we got a vote result message so check if we need to transition
+            if self.StateInfo.votes >= ((len(self.NodeAddrs) + 1) / 2):
+                self.transition('Leader')
+                return
