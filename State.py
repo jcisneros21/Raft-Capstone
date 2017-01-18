@@ -2,10 +2,10 @@ import threading
 import RaftMessages_pb2 as protoc
 
 class State():
-  def __init__(self):
-    self.term = 0
+  def __init__(self,term):
+    self.term = term
 
-  def replyAENACK(self, toAddr, toPort, term):
+  def createAENACK(self, toAddr, toPort, term):
     message = protoc.AppendReply()
     message.toAddr = toAddr
     message.toPort = toPort
@@ -13,7 +13,7 @@ class State():
     message.success = False
     return protoc.APPENDREPLY, message
 
-  def replyAEACK(self, toAddr, toPort, term):
+  def createAEACK(self, toAddr, toPort, term):
     message = protoc.AppendReply()
     message.toAddr = toAddr
     message.toPort = toPort
@@ -21,7 +21,7 @@ class State():
     message.success = True
     return protoc.APPENDREPLY, message
 
-  def sendVoteNACK(self, toAddr, toPort, term):
+  def createVoteNACK(self, toAddr, toPort, term):
     voteack = protoc.VoteResult()
     voteack.toAddr = toAddr
     voteack.toPort = toPort
@@ -29,7 +29,7 @@ class State():
     voteack.granted = False
     return protoc.VOTERESULT, voteack
 
-  def sendVoteACK(self, toAddr, toPort, term):
+  def createVoteNACK(self, toAddr, toPort, term):
     voteack = protoc.VoteResult()
     voteack.toAddr = toAddr
     voteack.toPort = toPort
@@ -40,18 +40,20 @@ class State():
 
 class LeaderState(State):
   def __init__(self):
-    State.__init__(self)
+    State.__init__(self,term)
+    self.term = term
     # Send Heartbeats once transitioned to inform a leader is present
-    self.sendHeartbeat()
+    self.createHeartbeat()
     # Time interval to send messages in seconds
     self.heartbeat = 4
     self.timer = None
 
   def initTimer(self):
-    self.timer = threading.Timer(self.heartbeat, self.sendHeartbeat)
+    self.timer = threading.Timer(self.heartbeat, self.createHeartbeat)
     self.timer.start()
 
-  def sendHeartbeat(self):
+  # Was sendHeartbeat
+  def createHeartbeat(self):
     message = protoc.AppendEntries()
     #self.initTimer()
     return protoc.APPENDENTRIES, message
@@ -63,44 +65,46 @@ class LeaderState(State):
 
 class CandidateState(State):
   def __init__(self):
-    State.__init__(self)
+    State.__init__(self,term)
+    self.term = term
     # Candidate has vote for himself
     self.votes = 1
     self.heardFromLeader = False
-    #self.requestVotes()
+    #self.createVote()
 
   def handleMessage(self, messageType, message, term):
     if messageType == protoc.REQUESTVOTE:
-      return self.sendVoteNACK(message.fromAddr, message.fromPort, term)
+      return self.createVoteNACK(message.fromAddr, message.fromPort, term)
     elif messageType == protoc.VOTERESULT:
       if message.granted:
         self.votes += 1
       return None,None
     elif messageType == protoc.APPENDENTRIES:
       if message.term < term:
-        return self.replyAENACK(message.fromAddr, message.fromPort, term)
+        return self.createAENACK(message.fromAddr, message.fromPort, term)
 
-  def requestVotes(self):
+  def createVote(self):
     message = protoc.RequestVote()
     return protoc.REQUESTVOTE, message
 
 
 class FollowerState(State):
   def __init__(self):
-    State.__init__(self)
+    State.__init__(self,term)
+    self.term = term
     self.voted = False
 
   def handleMessage(self, messageType, message, term):
     # If RequestVote Message is Recieved
     if messageType == protoc.REQUESTVOTE:
       if self.voted:
-        return self.sendVoteNACK(message.fromAddr, message.fromPort, term)
+        return self.createVoteNACK(message.fromAddr, message.fromPort, term)
       else:
         self.voted = True
-        return self.sendVoteACK(message.fromAddr, message.fromPort, term)
+        return self.createVoteNACK(message.fromAddr, message.fromPort, term)
     # If AppendEntries Message is Recieved
     elif messageType == protoc.APPENDENTRIES:
       if message.term < term:
-        return self.replyAENACK(message.fromAddr, message.fromPort, term)
+        return self.createAENACK(message.fromAddr, message.fromPort, term)
       else:
-        return self.replyAEACK(message.fromAddr, message.fromPort, term)
+        return self.createAEACK(message.fromAddr, message.fromPort, term)
