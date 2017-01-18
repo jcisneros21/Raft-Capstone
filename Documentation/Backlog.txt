@@ -10,7 +10,9 @@ Syntax of Creating Tasks:
 - Task_Name            Ranking_of_Task
   - Assigned_Person_to_Complete_Task 
 
-Tasks:                                                        Rank:           
+Tasks:                                                        Rank:    
+- Implement responses to NACK and ACK   
+- Fix when return False in transitions    
 - Get Heartbeats to work in the system.
 - Fix Bug - Operations don't work correctly when there
             are 5 hosts in the system.
