@@ -1,0 +1,8 @@
+File to list any bugs found during the process of implementing Raft.
+
+Syntax for listing Bug:
+- Bug_Description                       -Date_of_when_Bug_was_found
+  - Name_of_the_Person_who_found_the_bug
+  - Not-Fixed/Fixed
+
+

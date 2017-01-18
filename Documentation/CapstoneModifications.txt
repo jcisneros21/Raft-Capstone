@@ -1,0 +1,26 @@
+---- Created 1/17/2017 ----
+
+Things that need to be done for completion of tasks:
+ - We need a daily report (atleast 3 times a week on progress)
+   - The method that I am thinking about is doing an email stand up 
+     where we can state two things: What we have done up to last
+     standup report to the current stand up report and what we plan
+     to have accomplished for the next standup report. This will take
+     place around 10am - 11am on Monday, Wednesday and Friday everyweek.
+   - A copy of each members standup should be forwarded to Dr.Esposito
+     so he knows of the current progress of the project.
+ - We need two days that we can meet up atleast to work on the project
+   together and talk about design decisions. The time that these meetings
+   will take should be atleast 2 to 3 hours long. One of these days will
+   be on the weekend while another one should be a weekday.
+ - A backlog should be made to indicate what needs to be done. New items
+   should be added to the backlog once every 2 weeks. Every item in the
+   backlog should be associated with a number of difficulty. Ranging from
+   1 to 20 as scrum poker has I believe.
+ - Weekly goals should be made in place to have a realization on what
+   needs to be done.
+
+We need to figure out the days in which we want to meet:
+ - I can't meet on Mondays and Fridays
+ - I believe Saturday and Wednesday works good for me.
+ - Should we change meetings with Fabio on Tuesdays?
