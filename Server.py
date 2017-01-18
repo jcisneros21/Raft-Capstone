@@ -28,7 +28,7 @@ class Server:
         nodeaddrsfile.close()
 
         self.StateSemaphore = threading.Semaphore()
-        self.StateInfo = State.FollowerState()
+        self.StateInfo = State.FollowerState(0)
 
         # init election timer and transition to CandidateState if it runs out
         self.electionTimeout = random.uniform(2, 5)
@@ -42,11 +42,16 @@ class Server:
         self.Socket.bind(self.addr)
         while True:
             data = self.Socket.recv(1024)
-            print('Starting new thread')
             threading.Thread(target=self.messageHandler, args=(data,)).start()
 
     def selectElectionTimeoutValue(self):
         self.electionTimeout = random.uniform(2, 5)
+
+    def resetTimer(self):
+        self.timer.cancel()
+        self.selectElectionTimeoutValue()
+        self.timer = threading.Timer(self.electionTimeout, self.transition, ['Candidate',])
+        self.timer.start()
 
     def getownip(self):
         result = subprocess.check_output(['ifconfig'], universal_newlines=True)
@@ -79,20 +84,16 @@ class Server:
             print('Transitioning to ' + state)
             self.timer.cancel()
             if state == 'Follower':
-                self.StateInfo = State.FollowerState()
+                self.StateInfo = State.FollowerState(self.StateInfo.term + 1)
                 # init new election timer
-                self.selectElectionTimeoutValue()
-                self.timer = threading.Timer(self.electionTimeout, self.transition, ['Candidate',])
-                self.timer.start()
+                self.resetTimer()
             elif state == 'Candidate':
-                self.StateInfo = State.CandidateState()
+                self.StateInfo = State.CandidateState(self.StateInfo.term + 1)
                 self.requestVotes()
                 # init new election timer
-                self.selectElectionTimeoutValue()
-                self.timer = threading.Timer(self.electionTimeout, self.transition, ['Candidate',])
-                self.timer.start()
+                self.resetTimer()
             elif state == 'Leader':
-                self.StateInfo = State.LeaderState()
+                self.StateInfo = State.LeaderState(self.StateInfo.term + 1)
                 self.heartbeat()
             self.StateSemaphore.release()
             successfulTransition = True
@@ -108,7 +109,7 @@ class Server:
         return isinstance(self.StateInfo, State.LeaderState)
 
     def sendMessage(self, messageType, message):
-        print('Sending message')
+        print('Sending {} message'.format(messageType))
         outgoingMessage = protoc.WrapperMessage()
         outgoingMessage.type = messageType
 
@@ -154,11 +155,23 @@ class Server:
 
         # if the term number is valid, the normal rules for the current state
         # apply
-        replyMessageType, replyMessage = self.StateInfo.handleMessage(messageType, innerMessage, self.StateInfo.term)
+        replyMessageType, replyMessage = self.StateInfo.handleMessage(messageType, innerMessage)
         if replyMessageType is not None or replyMessage is not None:
+            if self.isFollower and replyMessageType is protoc.APPENDREPLY:
+                if replyMessage.success:
+                    #if we're in follower state and we heard from a legit leader
+                    self.resetTimer()
             self.sendMessage(replyMessageType, replyMessage)
         else:
-            # we got a vote result message so check if we need to transition
-            if self.StateInfo.votes >= ((len(self.NodeAddrs) + 1) / 2):
-                self.transition('Leader')
-                return
+            # we don't need to send anything.  We need to either tansition or
+            #do nothing
+            if self.isLeader():
+                # got voterequest or appendentries
+                pass
+            elif self.isCandidate():
+                #mose likely got a voteresult but could have been AppendEntries
+                if self.StateInfo.votes >= (len(self.NodeAddrs) + 1) // 2:
+                    # if we have a majority of votes
+                    self.transition('Leader')
+            elif self.isFollower():
+                pass
