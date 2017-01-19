@@ -44,10 +44,11 @@ class LeaderState(State):
     print('New Follower state. Term # {}'.format(term))
 
   def initTimer(self):
-    self.timer = threading.Timer(self.heartbeat, self.sendHeartbeat)
+    self.timer = threading.Timer(self.heartbeat, self.createHeartbeat)
     self.timer.start()
 
-  def sendHeartbeat(self):
+  # Was sendHeartbeat
+  def createHeartbeat(self):
     message = protoc.AppendEntries()
     #self.initTimer()
     return protoc.APPENDENTRIES, message
@@ -86,7 +87,7 @@ class CandidateState(State):
         # from someone who won the election
         return None, None
 
-  def requestVotes(self):
+  def createVote(self):
     message = protoc.RequestVote()
     return protoc.REQUESTVOTE, message
 
