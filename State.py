@@ -75,21 +75,18 @@ class State():
 class LeaderState(State):
   def __init__(self, term):
     State.__init__(self, term)
-    print('New Follower state. Term # {}'.format(term))
-
-  def initTimer(self):
-    self.timer = threading.Timer(self.heartbeat, self.createHeartbeat)
-    self.timer.start()
+    print('New Leader state. Term # {}'.format(self.term))
 
   # Was sendHeartbeat
   def sendHeartbeat(self):
     message = protoc.AppendEntries()
     message.info = self.randText()
+    message.term = self.term
     #self.initTimer()
     return protoc.APPENDENTRIES, message
 
   def handleMessage(self, messageType, message):
-    print('Leader got messageType {}'.format(messageType))
+    print('Leader got messageType {} from {}'.format(messageType, message.fromAddr))
     if messageType is protoc.REQUESTVOTE:
       return self.sendVoteNACK(message.fromAddr, message.fromPort)
     elif messageType is protoc.APPENDENTRIES:
@@ -101,18 +98,21 @@ class LeaderState(State):
 class CandidateState(State):
   def __init__(self, term):
     State.__init__(self, term)
-    print('New Follower state. Term # {}'.format(term))
+    print('New Candidate state. Term # {}'.format(self.term))
     # Candidate has vote for himself
     self.votes = 1
     self.heardFromLeader = False
 
   def handleMessage(self, messageType, message):
-    print('Candidate got messageType {}'.format(messageType))
+    print('Candidate got messageType {} from {}'.format(messageType, message.fromAddr))
     if messageType == protoc.REQUESTVOTE:
-      return self.sendVoteNACK(message.fromAddr, message.fromPort)
+      if message.term > self.term:
+        return self.sendVoteNACK(message.fromAddr, message.fromPort)
     elif messageType == protoc.VOTERESULT:
+      print('Message.granted = {}'.format(message.granted))
       if message.granted:
         self.votes += 1
+        print('applied vote. new vote count is {}'.format(self.votes))
       return None,None
     elif messageType == protoc.APPENDENTRIES:
       if message.term < self.term:
@@ -124,16 +124,17 @@ class CandidateState(State):
 
   def requestVotes(self):
     message = protoc.RequestVote()
+    message.term = self.term
     return protoc.REQUESTVOTE, message
 
 class FollowerState(State):
   def __init__(self, term):
     State.__init__(self, term)
-    print('New Follower state. Term # {}'.format(term))
+    print('New Follower state. Term # {}'.format(self.term))
     self.voted = False
 
   def handleMessage(self, messageType, message):
-    print('Follower got messageType {}'.format(messageType))
+    print('Follower got messageType {} from {}'.format(messageType, message.fromAddr))
     # If RequestVote Message is Recieved
     if messageType == protoc.REQUESTVOTE:
       if self.voted:
@@ -148,4 +149,5 @@ class FollowerState(State):
       else:
         self.writeToLog(message)
         self.readLog()
+        self.voted = False
         return self.replyAEACK(message.fromAddr, message.fromPort)

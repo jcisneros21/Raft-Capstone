@@ -6,7 +6,6 @@ import subprocess
 import re
 import State
 import random
-import math
 
 class Server:
     def __init__(self):
@@ -32,10 +31,10 @@ class Server:
         self.StateInfo = State.FollowerState(0)
 
         # init election timer and transition to CandidateState if it runs out
-        self.electionTimeout = random.uniform(8, 10)
+        self.electionTimeout = random.uniform(2, 5)
         self.timer = threading.Timer(self.electionTimeout, self.transition, ('Candidate',))
         self.timer.start()
-        self.heartbeatTimeout = 5
+        self.heartbeatTimeout = 1
         self.listen()
 
     def listen(self):
@@ -46,7 +45,7 @@ class Server:
             threading.Thread(target=self.messageHandler, args=(data,)).start()
 
     def selectElectionTimeoutValue(self):
-        self.electionTimeout = random.uniform(8, 10)
+        self.electionTimeout = random.uniform(2, 5)
 
     def resetTimer(self):
         self.timer.cancel()
@@ -64,6 +63,8 @@ class Server:
             messageType,message = self.StateInfo.requestVotes()
             message.toAddr = server[0]
             message.toPort = server[1]
+            message.fromAddr = self.addr[0]
+            message.fromPort = self.addr[1]
             self.sendMessage(messageType, message)
 
     def heartbeat(self):
@@ -71,6 +72,8 @@ class Server:
             messageType,message = self.StateInfo.sendHeartbeat()
             message.toAddr = server[0]
             message.toPort = server[1]
+            message.fromAddr = self.addr[0]
+            message.fromPort = self.addr[1]
             self.sendMessage(messageType, message)
         self.timer = threading.Timer(self.heartbeatTimeout, self.heartbeat)
         self.timer.start()
@@ -81,15 +84,16 @@ class Server:
             print('Transitioning to ' + state)
             self.timer.cancel()
             if state == 'Follower':
-                self.StateInfo = State.FollowerState(self.StateInfo.term)
+                self.StateInfo = State.FollowerState(self.StateInfo.term + 1)
                 # init new election timer
                 self.resetTimer()
             elif state == 'Candidate':
                 self.StateInfo = State.CandidateState(self.StateInfo.term + 1)
-                self.resetTimer()
                 self.requestVotes()
+                # init new election timer
+                self.resetTimer()
             elif state == 'Leader':
-                self.StateInfo = State.LeaderState(self.StateInfo.term)
+                self.StateInfo = State.LeaderState(self.StateInfo.term + 1)
                 self.heartbeat()
             self.StateSemaphore.release()
             successfulTransition = True
@@ -106,8 +110,6 @@ class Server:
 
     def sendMessage(self, messageType, message):
         print('Sending {} message'.format(messageType))
-        message.fromAddr = self.addr[0]
-        message.fromPort = self.addr[1]
         outgoingMessage = protoc.WrapperMessage()
         outgoingMessage.type = messageType
 
@@ -147,33 +149,30 @@ class Server:
         # for all servers in all states the first thing we need to check is
         # that our term number is not out of date
         if innerMessage.term > self.StateInfo.term:
-            print('Got a higher term number\n\n')
-            self.StateInfo.term = innerMessage.term
             self.transition('Follower')
+            return
         #TODO: Check if commitindex > last applied after we implement logs
 
         # if the term number is valid, the normal rules for the current state
         # apply
         replyMessageType, replyMessage = self.StateInfo.handleMessage(messageType, innerMessage)
-
-        if self.isFollower():
-            # only responsibility is to respond to messages from Candidates and
-            # leaders
-            if replyMessageType == protoc.APPENDREPLY and replyMessage.success:
-                self.resetTimer()
+        if replyMessageType is not None or replyMessage is not None:
+            if self.isFollower and replyMessageType is protoc.APPENDREPLY:
+                if replyMessage.success:
+                    #if we're in follower state and we heard from a legit leader
+                    self.resetTimer()
             self.sendMessage(replyMessageType, replyMessage)
-        elif self.isCandidate():
-            # if we have something to send then just need to send it
-            if replyMessageType is not None:
-                self.sendMessage(replyMessageType, replyMessage)
-            else:
-                # otherwise we got a vote result or a heartbeat
-                if self.StateInfo.heardFromLeader:
-                    # if heartbeat someone else won
-                    self.transition('Follower')
-                elif self.StateInfo.votes > (len(self.NodeAddrs) + 1) // 2:
-                    # if vote, check to see if we won
+        else:
+            # we don't need to send anything.  We need to either tansition or
+            #do nothing
+            if self.isLeader():
+                # got voterequest or appendentries
+                pass
+            elif self.isCandidate():
+                #mose likely got a voteresult but could have been AppendEntries
+                if self.StateInfo.votes >= (len(self.NodeAddrs) + 1) // 2:
+                    # if we have a majority of votes
                     self.transition('Leader')
-        elif self.isLeader():
-            # until we implement logs we don't need to do anything here
-            pass
+            elif self.isFollower():
+                pass
+

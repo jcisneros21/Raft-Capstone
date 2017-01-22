@@ -174,6 +174,12 @@ class Server:
                 elif self.StateInfo.votes > (len(self.NodeAddrs) + 1) // 2:
                     # if vote, check to see if we won
                     self.transition('Leader')
+<<<<<<< HEAD
+            elif self.isFollower():
+                pass
+
+=======
         elif self.isLeader():
             # until we implement logs we don't need to do anything here
             pass
+>>>>>>> FredAlphaDesign
