@@ -175,3 +175,4 @@ class Server:
                     self.transition('Leader')
             elif self.isFollower():
                 pass
+

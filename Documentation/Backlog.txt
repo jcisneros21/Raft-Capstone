@@ -10,7 +10,13 @@ Syntax of Creating Tasks:
 - Task_Name            Ranking_of_Task
   - Assigned_Person_to_Complete_Task 
 
-Tasks:                                                        Rank:    
+Tasks:                                                        Rank:  
+- Fix any concurrency issues with reading and writing logs
+  - May need to add some semaphores to the task above
+- LogEntry message needs to be created, 
+- Implement 5 logs for testing all hosts (this won't matter 
+  for raspberry pi's)
+- Make a script to start all connections in the raspberry pi's 
 - Implement responses to NACK and ACK   
 - Fix when return False in transitions    
 - Get Heartbeats to work in the system.
@@ -21,3 +27,9 @@ Tasks:                                                        Rank:
 - Implement a Message Queue for containing recieved Messages
 - Complete system testing to see if all consensus use cases
   work properly as they should.
+- May need to use a dictionary to store all logs
+  - The reason for this is because it might be beneficial to
+    have to have a certified index in the message that would
+    indicate that it is the key for that Log Entry. Order 
+    won't matter then.
+    Ex: [0:Log1, 4:Log5, 2:Log3]

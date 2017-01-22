@@ -1,5 +1,6 @@
 import threading
 import RaftMessages_pb2 as protoc
+import random
 
 class State():
   def __init__(self, term):
@@ -37,6 +38,39 @@ class State():
     voteack.granted = True
     return protoc.VOTERESULT, voteack
 
+  def writeToLog(self, message):
+    log = protoc.LogEntries()
+    log_file = open("log.txt", "rb")
+    log.ParseFromString(log_file.read())
+    log_file.close()
+    log.entry.extend([message])
+    
+    log_file = open("log.txt", "wb")
+    log_file.write(log.SerializeToString())
+    log_file.close()
+  
+  def readLog(self):
+    log = protoc.LogEntries()
+    log_file = open("log.txt", "rb")
+    log.ParseFromString(log_file.read())
+    log_file.close()
+
+    self.ListEntries(log)
+
+  def ListEntries(self, log):
+    i = 0
+    for entry in log.entry:
+      print()
+      i += 1
+      print("Entry #" + str(i))
+      print(entry.info)
+      print()
+
+  def randText(self):
+    word_file = "text.txt"
+    words = open(word_file).read().split()
+    return random.choice(words)
+
 
 class LeaderState(State):
   def __init__(self, term):
@@ -48,8 +82,9 @@ class LeaderState(State):
     self.timer.start()
 
   # Was sendHeartbeat
-  def createHeartbeat(self):
+  def sendHeartbeat(self):
     message = protoc.AppendEntries()
+    message.info = self.randText()
     #self.initTimer()
     return protoc.APPENDENTRIES, message
 
@@ -87,7 +122,7 @@ class CandidateState(State):
         # from someone who won the election
         return None, None
 
-  def createVote(self):
+  def requestVotes(self):
     message = protoc.RequestVote()
     return protoc.REQUESTVOTE, message
 
@@ -111,4 +146,6 @@ class FollowerState(State):
       if message.term < self.term:
         return self.replyAENACK(message.fromAddr, message.fromPort)
       else:
+        self.writeToLog(message)
+        self.readLog()
         return self.replyAEACK(message.fromAddr, message.fromPort)

@@ -41,6 +41,7 @@ message AppendEntries {
   string toAddr = 3;
   int32 toPort = 4;
   int32 term = 5;
+  string info = 6;
 };
 
 message AppendReply {
@@ -60,3 +61,6 @@ message WrapperMessage {
   AppendReply arm = 5;
 };
 
+message LogEntries {
+  repeated AppendEntries entry = 1;
+}

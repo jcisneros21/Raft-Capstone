@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='RaftMessages.proto',
   package='Raft',
   syntax='proto3',
-  serialized_pb=_b('\n\x12RaftMessages.proto\x12\x04Raft\"\x8a\x01\n\x0bRequestVote\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x14\n\x0clastLogIndex\x18\x06 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x07 \x01(\x05\"o\n\nVoteResult\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07granted\x18\x06 \x01(\x08\"o\n\rAppendEntries\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0c\n\x04info\x18\x06 \x01(\t\"p\n\x0b\x41ppendReply\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07success\x18\x06 \x01(\x08\"\xb2\x01\n\x0eWrapperMessage\x12\x1f\n\x04type\x18\x01 \x01(\x0e\x32\x11.Raft.MessageType\x12\x1e\n\x03rvm\x18\x02 \x01(\x0b\x32\x11.Raft.RequestVote\x12\x1d\n\x03vrm\x18\x03 \x01(\x0b\x32\x10.Raft.VoteResult\x12 \n\x03\x61\x65m\x18\x04 \x01(\x0b\x32\x13.Raft.AppendEntries\x12\x1e\n\x03\x61rm\x18\x05 \x01(\x0b\x32\x11.Raft.AppendReply\"0\n\nLogEntries\x12\"\n\x05\x65ntry\x18\x01 \x03(\x0b\x32\x13.Raft.AppendEntries*R\n\x0bMessageType\x12\x0f\n\x0bREQUESTVOTE\x10\x00\x12\x0e\n\nVOTERESULT\x10\x01\x12\x11\n\rAPPENDENTRIES\x10\x03\x12\x0f\n\x0b\x41PPENDREPLY\x10\x04\x62\x06proto3')
+  serialized_pb=_b('\n\x12RaftMessages.proto\x12\x04Raft\"\x8a\x01\n\x0bRequestVote\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x14\n\x0clastLogIndex\x18\x06 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x07 \x01(\x05\"o\n\nVoteResult\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07granted\x18\x06 \x01(\x08\"a\n\rAppendEntries\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\"p\n\x0b\x41ppendReply\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07success\x18\x06 \x01(\x08\"\xb2\x01\n\x0eWrapperMessage\x12\x1f\n\x04type\x18\x01 \x01(\x0e\x32\x11.Raft.MessageType\x12\x1e\n\x03rvm\x18\x02 \x01(\x0b\x32\x11.Raft.RequestVote\x12\x1d\n\x03vrm\x18\x03 \x01(\x0b\x32\x10.Raft.VoteResult\x12 \n\x03\x61\x65m\x18\x04 \x01(\x0b\x32\x13.Raft.AppendEntries\x12\x1e\n\x03\x61rm\x18\x05 \x01(\x0b\x32\x11.Raft.AppendReply*R\n\x0bMessageType\x12\x0f\n\x0bREQUESTVOTE\x10\x00\x12\x0e\n\nVOTERESULT\x10\x01\x12\x11\n\rAPPENDENTRIES\x10\x03\x12\x0f\n\x0b\x41PPENDREPLY\x10\x04\x62\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -49,8 +49,8 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=740,
-  serialized_end=822,
+  serialized_start=676,
+  serialized_end=758,
 )
 _sym_db.RegisterEnumDescriptor(_MESSAGETYPE)
 
@@ -243,13 +243,6 @@ _APPENDENTRIES = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
-    _descriptor.FieldDescriptor(
-      name='info', full_name='Raft.AppendEntries.info', index=5,
-      number=6, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
   ],
   extensions=[
   ],
@@ -263,7 +256,7 @@ _APPENDENTRIES = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=282,
-  serialized_end=393,
+  serialized_end=379,
 )
 
 
@@ -328,8 +321,8 @@ _APPENDREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=395,
-  serialized_end=507,
+  serialized_start=381,
+  serialized_end=493,
 )
 
 
@@ -387,39 +380,8 @@ _WRAPPERMESSAGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=510,
-  serialized_end=688,
-)
-
-
-_LOGENTRIES = _descriptor.Descriptor(
-  name='LogEntries',
-  full_name='Raft.LogEntries',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='entry', full_name='Raft.LogEntries.entry', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=690,
-  serialized_end=738,
+  serialized_start=496,
+  serialized_end=674,
 )
 
 _WRAPPERMESSAGE.fields_by_name['type'].enum_type = _MESSAGETYPE
@@ -427,13 +389,11 @@ _WRAPPERMESSAGE.fields_by_name['rvm'].message_type = _REQUESTVOTE
 _WRAPPERMESSAGE.fields_by_name['vrm'].message_type = _VOTERESULT
 _WRAPPERMESSAGE.fields_by_name['aem'].message_type = _APPENDENTRIES
 _WRAPPERMESSAGE.fields_by_name['arm'].message_type = _APPENDREPLY
-_LOGENTRIES.fields_by_name['entry'].message_type = _APPENDENTRIES
 DESCRIPTOR.message_types_by_name['RequestVote'] = _REQUESTVOTE
 DESCRIPTOR.message_types_by_name['VoteResult'] = _VOTERESULT
 DESCRIPTOR.message_types_by_name['AppendEntries'] = _APPENDENTRIES
 DESCRIPTOR.message_types_by_name['AppendReply'] = _APPENDREPLY
 DESCRIPTOR.message_types_by_name['WrapperMessage'] = _WRAPPERMESSAGE
-DESCRIPTOR.message_types_by_name['LogEntries'] = _LOGENTRIES
 DESCRIPTOR.enum_types_by_name['MessageType'] = _MESSAGETYPE
 
 RequestVote = _reflection.GeneratedProtocolMessageType('RequestVote', (_message.Message,), dict(
@@ -470,13 +430,6 @@ WrapperMessage = _reflection.GeneratedProtocolMessageType('WrapperMessage', (_me
   # @@protoc_insertion_point(class_scope:Raft.WrapperMessage)
   ))
 _sym_db.RegisterMessage(WrapperMessage)
-
-LogEntries = _reflection.GeneratedProtocolMessageType('LogEntries', (_message.Message,), dict(
-  DESCRIPTOR = _LOGENTRIES,
-  __module__ = 'RaftMessages_pb2'
-  # @@protoc_insertion_point(class_scope:Raft.LogEntries)
-  ))
-_sym_db.RegisterMessage(LogEntries)
 
 
 # @@protoc_insertion_point(module_scope)
