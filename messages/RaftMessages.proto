@@ -9,15 +9,8 @@ enum MessageType {
   APPENDREPLY = 4;
 }
 
-/*message Addresses {
-  string fromAddr = 1;
-  int32 fromPort = 2;
-  string toAddr = 3;
-  int32 toPort = 4;
-}*/
-
 message RequestVote {
-  string fromAddr = 1;
+  string fromAddr = 1;      // candidate ip address
   int32 fromPort = 2;
   string toAddr = 3;
   int32 toPort = 4;
@@ -36,11 +29,15 @@ message VoteResult {
 };
 
 message AppendEntries {
-  string fromAddr = 1;
+  string fromAddr = 1;            // leader ip address
   int32 fromPort = 2;
   string toAddr = 3;
   int32 toPort = 4;
   int32 term = 5;
+  int32 prevLogIndex = 6;
+  int32 prevLogTerm = 7;
+  repeated LogEntry entries = 8;  // entries to be committed
+  int32 leaderCommit = 9;
 };
 
 message AppendReply {
@@ -49,7 +46,7 @@ message AppendReply {
   string toAddr = 3;
   int32 toPort = 4;
   int32 term = 5;
-  bool success = 6;
+  bool success = 6;     // true if follower contained entry matching prevLogIndex and prevLogTerm
 };
 
 message WrapperMessage {
@@ -60,3 +57,16 @@ message WrapperMessage {
   AppendReply arm = 5;
 };
 
+message LogEntry {
+  bool committed = 1;
+  string data = 2;        // this is a placeholder for the command
+  int32 creationTerm = 3;
+  int32 logPosition = 4;  // this is the same as the key for this entry in the dict
+}
+
+// the persistent state for each server that is written to disk every time we
+// send a message
+message serverState {
+  int32 currentTerm = 1;
+  string ipVotedFor = 2;  // the ip of the candidate that this server voted for this term
+}
