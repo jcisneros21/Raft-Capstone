@@ -1,0 +1,6 @@
+We should have a State-Info Class which uses a mutex. This State-Info
+Figure out message, state and once it has these two pieces it can do what it needs to do.
+I need to throw away messages with lower term numbers
+Write State needs to be the one that has this mutex. All threads waiting with lower term number should be thrown away.
+Only threads with same or higher term numbers should be kept.
+Writing conditions, leader sending out 

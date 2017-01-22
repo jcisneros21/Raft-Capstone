@@ -1,0 +1,11 @@
+TO DO:
+0- Keep a journal of all problems and lesson learned you encounter doing the design, implementation and raspberry pi deployment
+1. Fred and Jessie - Refine current design documents as the implementation grows
+2. Fred and Jessie - Clean up leader election phase implementation 
+3. Fred and Jessie - Implement the consensus use case with no failures
+4. Fred and Jessie - Implement the consensus use case with failures
+5. Fred and Jessie - Design modifications to Raft so that it does not block when the majority is not up
+6. Jessie - Implement "Asynchronous CBBA (ACBBA)" within mininet  See paper attached. Implementations (including mine) are already available.
+7. Fred - Implement a Randomized Consensus Algorithm within mininet. 
+8. Fred and Jessie. Compare Raft, our non-blocking version of Raft, ACBBA and Randomized consensus across several topologies and failure models generated with mininet, and produce some plots. We will discuss this point further together.
+

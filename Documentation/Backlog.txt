@@ -1,0 +1,23 @@
+--- Backlog Created 1/18/17 ---
+--- Backlog Contains Tasks to Complete by 1/30 ---
+
+Important Note:
+ - For each task, proper testing and documentation should
+   be enacted to insure completion and understanding for each
+   functionality of the project.
+
+Syntax of Creating Tasks:
+- Task_Name            Ranking_of_Task
+  - Assigned_Person_to_Complete_Task 
+
+Tasks:                                                        Rank:    
+- Implement responses to NACK and ACK   
+- Fix when return False in transitions    
+- Get Heartbeats to work in the system.
+- Fix Bug - Operations don't work correctly when there
+            are 5 hosts in the system.
+- Implement logs to hold messages
+- Set up concurrency of threads correctly
+- Implement a Message Queue for containing recieved Messages
+- Complete system testing to see if all consensus use cases
+  work properly as they should.

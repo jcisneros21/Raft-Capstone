@@ -1,0 +1,10 @@
+1) Remove termNumber from handleMessage definition
+2) Move all timer/threading functionality to Server
+   - Specifically the heartbeat message timer functionality
+3) Rename message creation methods so they no longer imply they are actually sending messages
+4) Add functionality to all State constructors to initialize to a term number other
+   than 0
+5) Write transition function in Server class, protect state info w/ semaphore
+
+1/7/17:
+1) Add functionality to message creation api to fill out message tonode and toport

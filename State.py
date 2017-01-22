@@ -43,7 +43,8 @@ class LeaderState(State):
     State.__init__(self, term)
     print('New Leader state. Term # {}'.format(self.term))
 
-  def sendHeartbeat(self):
+  # Was sendHeartbeat
+  def createHeartbeat(self):
     message = protoc.AppendEntries()
     message.term = self.term
     #self.initTimer()
@@ -86,7 +87,7 @@ class CandidateState(State):
         # from someone who won the election
         return None, None
 
-  def requestVotes(self):
+  def createVote(self):
     message = protoc.RequestVote()
     message.term = self.term
     return protoc.REQUESTVOTE, message
