@@ -2,9 +2,20 @@ import threading
 import RaftMessages_pb2 as protoc
 import random
 
+'''Only write to disk if I send a message
+   writeToLog will save a message to a dictionary
+   readFromLog will read from dictionary
+   We need to have a function where the instance
+   of this algorithm will call on startup to
+   extract the log that had been saved.
+'''
+
 class State():
   def __init__(self, term):
+    self.log = []
     self.term = term
+    self.commitIndex = 0
+    self.lastApplied = 0
 
   def replyAENACK(self, toAddr, toPort):
     message = protoc.AppendReply()
@@ -39,6 +50,25 @@ class State():
     return protoc.VOTERESULT, voteack
 
   def writeToLog(self, message):
+    entry = protoc.LogEntry()
+    entry.committed = message.leaderCommit
+    entry.data = message.info
+    entry.currentTerm = message.term
+    entry.logPosition = message.index
+    self.log[message.index] = entry
+    return True
+
+  def readToLog(self, message, index):
+    return self.log[index]
+ 
+  def nextIndex(self):
+    pass
+ 
+  def matchIndex(self):
+    pass
+
+  
+  '''def writeToLog(self, message):
     log = protoc.LogEntries()
     log_file = open("log.txt", "rb")
     log.ParseFromString(log_file.read())
@@ -64,7 +94,7 @@ class State():
       i += 1
       print("Entry #" + str(i))
       print(entry.info)
-      print()
+      print() '''
 
   def randText(self):
     word_file = "text.txt"
