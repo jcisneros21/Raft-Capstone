@@ -1,0 +1,19 @@
+- - Fix any concurrency issues with reading and writing logs
+  - May need to add some semaphores to the task above
+  - Jessie
+- Implement 5 logs for testing all hosts (this won't matter
+  for raspberry pi's)
+  - Fred
+- Proper HAndling of AppendEntries Messages (Log Entries)
+  - Jessie
+- Implement Leader commit Logic
+  - Fred
+- Implement logs to hold messages
+  - Jessie and Fred
+- May need to use a dictionary to store all logs
+  - The reason for this is because it might be beneficial to
+    have to have a certified index in the message that would
+    indicate that it is the key for that Log Entry. Order
+    won't matter then.
+    Ex: [0:Log1, 4:Log5, 2:Log3]
+  - Jessie
