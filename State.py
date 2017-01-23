@@ -177,7 +177,5 @@ class FollowerState(State):
       if message.term < self.term:
         return self.replyAENACK(message.fromAddr, message.fromPort)
       else:
-        self.writeToLog(message)
-        self.readLog()
         self.voted = False
         return self.replyAEACK(message.fromAddr, message.fromPort)

@@ -34,14 +34,11 @@ message AppendEntries {
   string toAddr = 3;
   int32 toPort = 4;
   int32 term = 5;
-<<<<<<< HEAD
   string info = 6;
-=======
   int32 prevLogIndex = 6;
   int32 prevLogTerm = 7;
   repeated LogEntry entries = 8;  // entries to be committed
   int32 leaderCommit = 9;
->>>>>>> FredAlphaDesign
 };
 
 message AppendReply {
@@ -61,10 +58,12 @@ message WrapperMessage {
   AppendReply arm = 5;
 };
 
-<<<<<<< HEAD
+// Will be replaced with python dictionaries
+// This message will be deleted soon if not needed
 message LogEntries {
   repeated AppendEntries entry = 1;
-=======
+}
+
 message LogEntry {
   bool committed = 1;
   string data = 2;        // this is a placeholder for the command
@@ -77,5 +76,4 @@ message LogEntry {
 message serverState {
   int32 currentTerm = 1;
   string ipVotedFor = 2;  // the ip of the candidate that this server voted for this term
->>>>>>> FredAlphaDesign
 }
