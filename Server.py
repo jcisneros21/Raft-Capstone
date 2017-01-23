@@ -61,14 +61,14 @@ class Server:
 
     def requestVotes(self):
         for server in self.NodeAddrs:
-            messageType,message = self.StateInfo.requestVotes()
+            messageType,message = self.StateInfo.createVote()
             message.toAddr = server[0]
             message.toPort = server[1]
             self.sendMessage(messageType, message)
 
     def heartbeat(self):
         for server in self.NodeAddrs:
-            messageType,message = self.StateInfo.sendHeartbeat()
+            messageType,message = self.StateInfo.createHeartbeat()
             message.toAddr = server[0]
             message.toPort = server[1]
             self.sendMessage(messageType, message)
@@ -146,11 +146,13 @@ class Server:
 
         # for all servers in all states the first thing we need to check is
         # that our term number is not out of date
+        if self.commitIndex > self.lastApplied:
+            self.StateInfo.lastApplied += 1
+            #applyLogEntryToStateMachine(self.StateInfo.lastApplied)
         if innerMessage.term > self.StateInfo.term:
             print('Got a higher term number\n\n')
             self.StateInfo.term = innerMessage.term
             self.transition('Follower')
-        #TODO: Check if commitindex > last applied after we implement logs
 
         # if the term number is valid, the normal rules for the current state
         # apply
