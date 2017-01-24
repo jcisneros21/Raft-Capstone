@@ -11,10 +11,19 @@ import random
 '''
 
 class State():
-  def __init__(self, term):
-    self.log = []
+  def __init__(self, term, currentLog=None):
+    # How do I save a log once I transition?
+    # I could make a copy of the log and insert it back
+    # once I transition.
+    # I could read from file
+    if currentLog is None:
+      self.log = {}
+    else:
+      self.log = currentLog
     self.term = term
+    # Index of last Commited Entry
     self.commitIndex = 0
+    # Current index of the log
     self.lastApplied = 0
 
   def replyAENACK(self, toAddr, toPort):
@@ -51,11 +60,15 @@ class State():
 
   def writeToLog(self, message):
     entry = protoc.LogEntry()
-    entry.committed = message.leaderCommit
+    entry.committed = False
     entry.data = message.info
-    entry.currentTerm = message.term
-    entry.logPosition = message.index
-    self.log[message.index] = entry
+    entry.creationTerm = message.term
+    entry.logPosition = message.prevLogIndex + 1
+    self.log[entry.logPosition] = entry
+    self.lastApplied += 1
+
+    if self.lastApplied == 20:
+      self.printLog()
     return True
 
   def readToLog(self, message, index):
@@ -67,18 +80,16 @@ class State():
   def matchIndex(self):
     pass
 
-  
-  '''def writeToLog(self, message):
-    log = protoc.LogEntries()
-    log_file = open("log.txt", "rb")
-    log.ParseFromString(log_file.read())
-    log_file.close()
-    log.entry.extend([message])
-    
-    log_file = open("log.txt", "wb")
-    log_file.write(log.SerializeToString())
-    log_file.close()
-  
+  def printLog(self):
+    for i in range(0, self.lastApplied):
+      entry = self.log[i]
+      print()
+      print(entry.committed)
+      print(entry.data)
+      print(entry.creationTerm)
+      print(entry.logPosition)
+      print()
+  '''
   def readLog(self):
     log = protoc.LogEntries()
     log_file = open("log.txt", "rb")
@@ -103,15 +114,20 @@ class State():
 
 
 class LeaderState(State):
-  def __init__(self, term):
-    State.__init__(self, term)
+  def __init__(self, term, currentLog=None):
+    State.__init__(self, term, currentLog)
     print('New Leader state. Term # {}'.format(self.term))
 
   # Was sendHeartbeat
   def sendHeartbeat(self):
     message = protoc.AppendEntries()
-    message.info = self.randText()
+    # This is generating random text each time
+    # This is not what I want!!!!
+    # I need to have a set word to send to everyone
+    # message.info = self.randText()
     message.term = self.term
+    message.prevLogIndex = self.lastApplied - 1
+    message.leaderCommit = False
     #self.initTimer()
     return protoc.APPENDENTRIES, message
 
@@ -126,8 +142,8 @@ class LeaderState(State):
       return None, None
 
 class CandidateState(State):
-  def __init__(self, term):
-    State.__init__(self, term)
+  def __init__(self, term, currentLog=None):
+    State.__init__(self, term, currentLog)
     print('New Candidate state. Term # {}'.format(self.term))
     # Candidate has vote for himself
     self.votes = 1
@@ -152,14 +168,14 @@ class CandidateState(State):
         # from someone who won the election
         return None, None
 
-  def requestVotes(self):
+  def requestVote(self):
     message = protoc.RequestVote()
     message.term = self.term
     return protoc.REQUESTVOTE, message
 
 class FollowerState(State):
-  def __init__(self, term):
-    State.__init__(self, term)
+  def __init__(self, term, currentLog=None):
+    State.__init__(self, term, currentLog)
     print('New Follower state. Term # {}'.format(self.term))
     self.voted = False
 
@@ -178,4 +194,5 @@ class FollowerState(State):
         return self.replyAENACK(message.fromAddr, message.fromPort)
       else:
         self.voted = False
+        self.writeToLog(message)
         return self.replyAEACK(message.fromAddr, message.fromPort)

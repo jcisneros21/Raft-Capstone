@@ -34,3 +34,8 @@ Tasks:                                                        Rank:
     indicate that it is the key for that Log Entry. Order 
     won't matter then.
     Ex: [0:Log1, 4:Log5, 2:Log3]
+- Implement logic to delete logs if the logs are not the same
+- May want to make a static variable of the python dictionary so it can be shared by all instances.
+- Serialize python dictionaries to JSON
+- Implement logic to delete entries in a log
+

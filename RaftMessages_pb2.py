@@ -20,11 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='RaftMessages.proto',
   package='Raft',
   syntax='proto3',
-<<<<<<< HEAD
-  serialized_pb=_b('\n\x12RaftMessages.proto\x12\x04Raft\"\x8a\x01\n\x0bRequestVote\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x14\n\x0clastLogIndex\x18\x06 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x07 \x01(\x05\"o\n\nVoteResult\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07granted\x18\x06 \x01(\x08\"o\n\rAppendEntries\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0c\n\x04info\x18\x06 \x01(\t\"p\n\x0b\x41ppendReply\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07success\x18\x06 \x01(\x08\"\xb2\x01\n\x0eWrapperMessage\x12\x1f\n\x04type\x18\x01 \x01(\x0e\x32\x11.Raft.MessageType\x12\x1e\n\x03rvm\x18\x02 \x01(\x0b\x32\x11.Raft.RequestVote\x12\x1d\n\x03vrm\x18\x03 \x01(\x0b\x32\x10.Raft.VoteResult\x12 \n\x03\x61\x65m\x18\x04 \x01(\x0b\x32\x13.Raft.AppendEntries\x12\x1e\n\x03\x61rm\x18\x05 \x01(\x0b\x32\x11.Raft.AppendReply\"0\n\nLogEntries\x12\"\n\x05\x65ntry\x18\x01 \x03(\x0b\x32\x13.Raft.AppendEntries*R\n\x0bMessageType\x12\x0f\n\x0bREQUESTVOTE\x10\x00\x12\x0e\n\nVOTERESULT\x10\x01\x12\x11\n\rAPPENDENTRIES\x10\x03\x12\x0f\n\x0b\x41PPENDREPLY\x10\x04\x62\x06proto3')
-=======
-  serialized_pb=_b('\n\x12RaftMessages.proto\x12\x04Raft\"\x8a\x01\n\x0bRequestVote\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x14\n\x0clastLogIndex\x18\x06 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x07 \x01(\x05\"o\n\nVoteResult\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07granted\x18\x06 \x01(\x08\"\xc3\x01\n\rAppendEntries\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x14\n\x0cprevLogIndex\x18\x06 \x01(\x05\x12\x13\n\x0bprevLogTerm\x18\x07 \x01(\x05\x12\x1f\n\x07\x65ntries\x18\x08 \x03(\x0b\x32\x0e.Raft.LogEntry\x12\x14\n\x0cleaderCommit\x18\t \x01(\x05\"p\n\x0b\x41ppendReply\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07success\x18\x06 \x01(\x08\"\xb2\x01\n\x0eWrapperMessage\x12\x1f\n\x04type\x18\x01 \x01(\x0e\x32\x11.Raft.MessageType\x12\x1e\n\x03rvm\x18\x02 \x01(\x0b\x32\x11.Raft.RequestVote\x12\x1d\n\x03vrm\x18\x03 \x01(\x0b\x32\x10.Raft.VoteResult\x12 \n\x03\x61\x65m\x18\x04 \x01(\x0b\x32\x13.Raft.AppendEntries\x12\x1e\n\x03\x61rm\x18\x05 \x01(\x0b\x32\x11.Raft.AppendReply\"V\n\x08LogEntry\x12\x11\n\tcommitted\x18\x01 \x01(\x08\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\t\x12\x14\n\x0c\x63reationTerm\x18\x03 \x01(\x05\x12\x13\n\x0blogPosition\x18\x04 \x01(\x05\"6\n\x0bserverState\x12\x13\n\x0b\x63urrentTerm\x18\x01 \x01(\x05\x12\x12\n\nipVotedFor\x18\x02 \x01(\t*R\n\x0bMessageType\x12\x0f\n\x0bREQUESTVOTE\x10\x00\x12\x0e\n\nVOTERESULT\x10\x01\x12\x11\n\rAPPENDENTRIES\x10\x03\x12\x0f\n\x0b\x41PPENDREPLY\x10\x04\x62\x06proto3')
->>>>>>> FredAlphaDesign
+  serialized_pb=_b('\n\x12RaftMessages.proto\x12\x04Raft\"\x8a\x01\n\x0bRequestVote\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x14\n\x0clastLogIndex\x18\x06 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x07 \x01(\x05\"o\n\nVoteResult\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07granted\x18\x06 \x01(\x08\"\xd1\x01\n\rAppendEntries\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0c\n\x04info\x18\x06 \x01(\t\x12\x14\n\x0cprevLogIndex\x18\x07 \x01(\x05\x12\x13\n\x0bprevLogTerm\x18\x08 \x01(\x05\x12\x1f\n\x07\x65ntries\x18\t \x03(\x0b\x32\x0e.Raft.LogEntry\x12\x14\n\x0cleaderCommit\x18\n \x01(\x05\"p\n\x0b\x41ppendReply\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07success\x18\x06 \x01(\x08\"\xb2\x01\n\x0eWrapperMessage\x12\x1f\n\x04type\x18\x01 \x01(\x0e\x32\x11.Raft.MessageType\x12\x1e\n\x03rvm\x18\x02 \x01(\x0b\x32\x11.Raft.RequestVote\x12\x1d\n\x03vrm\x18\x03 \x01(\x0b\x32\x10.Raft.VoteResult\x12 \n\x03\x61\x65m\x18\x04 \x01(\x0b\x32\x13.Raft.AppendEntries\x12\x1e\n\x03\x61rm\x18\x05 \x01(\x0b\x32\x11.Raft.AppendReply\"0\n\nLogEntries\x12\"\n\x05\x65ntry\x18\x01 \x03(\x0b\x32\x13.Raft.AppendEntries\"V\n\x08LogEntry\x12\x11\n\tcommitted\x18\x01 \x01(\x08\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\t\x12\x14\n\x0c\x63reationTerm\x18\x03 \x01(\x05\x12\x13\n\x0blogPosition\x18\x04 \x01(\x05\"6\n\x0bserverState\x12\x13\n\x0b\x63urrentTerm\x18\x01 \x01(\x05\x12\x12\n\nipVotedFor\x18\x02 \x01(\t*R\n\x0bMessageType\x12\x0f\n\x0bREQUESTVOTE\x10\x00\x12\x0e\n\nVOTERESULT\x10\x01\x12\x11\n\rAPPENDENTRIES\x10\x03\x12\x0f\n\x0b\x41PPENDREPLY\x10\x04\x62\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -53,13 +49,8 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-<<<<<<< HEAD
-  serialized_start=740,
-  serialized_end=822,
-=======
-  serialized_start=919,
-  serialized_end=1001,
->>>>>>> FredAlphaDesign
+  serialized_start=983,
+  serialized_end=1065,
 )
 _sym_db.RegisterEnumDescriptor(_MESSAGETYPE)
 
@@ -253,36 +244,37 @@ _APPENDENTRIES = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-<<<<<<< HEAD
       name='info', full_name='Raft.AppendEntries.info', index=5,
       number=6, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
-=======
-      name='prevLogIndex', full_name='Raft.AppendEntries.prevLogIndex', index=5,
-      number=6, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='prevLogTerm', full_name='Raft.AppendEntries.prevLogTerm', index=6,
+      name='prevLogIndex', full_name='Raft.AppendEntries.prevLogIndex', index=6,
       number=7, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='entries', full_name='Raft.AppendEntries.entries', index=7,
-      number=8, type=11, cpp_type=10, label=3,
+      name='prevLogTerm', full_name='Raft.AppendEntries.prevLogTerm', index=7,
+      number=8, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='entries', full_name='Raft.AppendEntries.entries', index=8,
+      number=9, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='leaderCommit', full_name='Raft.AppendEntries.leaderCommit', index=8,
-      number=9, type=5, cpp_type=1, label=1,
+      name='leaderCommit', full_name='Raft.AppendEntries.leaderCommit', index=9,
+      number=10, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
->>>>>>> FredAlphaDesign
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -298,13 +290,8 @@ _APPENDENTRIES = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-<<<<<<< HEAD
-  serialized_start=282,
-  serialized_end=393,
-=======
   serialized_start=283,
-  serialized_end=478,
->>>>>>> FredAlphaDesign
+  serialized_end=492,
 )
 
 
@@ -369,13 +356,8 @@ _APPENDREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-<<<<<<< HEAD
-  serialized_start=395,
-  serialized_end=507,
-=======
-  serialized_start=480,
-  serialized_end=592,
->>>>>>> FredAlphaDesign
+  serialized_start=494,
+  serialized_end=606,
 )
 
 
@@ -433,35 +415,50 @@ _WRAPPERMESSAGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-<<<<<<< HEAD
-  serialized_start=510,
-  serialized_end=688,
+  serialized_start=609,
+  serialized_end=787,
 )
 
 
 _LOGENTRIES = _descriptor.Descriptor(
   name='LogEntries',
   full_name='Raft.LogEntries',
-=======
-  serialized_start=595,
-  serialized_end=773,
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='entry', full_name='Raft.LogEntries.entry', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=789,
+  serialized_end=837,
 )
 
 
 _LOGENTRY = _descriptor.Descriptor(
   name='LogEntry',
   full_name='Raft.LogEntry',
->>>>>>> FredAlphaDesign
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-<<<<<<< HEAD
-      name='entry', full_name='Raft.LogEntries.entry', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-=======
       name='committed', full_name='Raft.LogEntry.committed', index=0,
       number=1, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
@@ -501,8 +498,8 @@ _LOGENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=775,
-  serialized_end=861,
+  serialized_start=839,
+  serialized_end=925,
 )
 
 
@@ -524,7 +521,6 @@ _SERVERSTATE = _descriptor.Descriptor(
       name='ipVotedFor', full_name='Raft.serverState.ipVotedFor', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
->>>>>>> FredAlphaDesign
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -540,13 +536,8 @@ _SERVERSTATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-<<<<<<< HEAD
-  serialized_start=690,
-  serialized_end=738,
-=======
-  serialized_start=863,
-  serialized_end=917,
->>>>>>> FredAlphaDesign
+  serialized_start=927,
+  serialized_end=981,
 )
 
 _APPENDENTRIES.fields_by_name['entries'].message_type = _LOGENTRY
@@ -561,12 +552,9 @@ DESCRIPTOR.message_types_by_name['VoteResult'] = _VOTERESULT
 DESCRIPTOR.message_types_by_name['AppendEntries'] = _APPENDENTRIES
 DESCRIPTOR.message_types_by_name['AppendReply'] = _APPENDREPLY
 DESCRIPTOR.message_types_by_name['WrapperMessage'] = _WRAPPERMESSAGE
-<<<<<<< HEAD
 DESCRIPTOR.message_types_by_name['LogEntries'] = _LOGENTRIES
-=======
 DESCRIPTOR.message_types_by_name['LogEntry'] = _LOGENTRY
 DESCRIPTOR.message_types_by_name['serverState'] = _SERVERSTATE
->>>>>>> FredAlphaDesign
 DESCRIPTOR.enum_types_by_name['MessageType'] = _MESSAGETYPE
 
 RequestVote = _reflection.GeneratedProtocolMessageType('RequestVote', (_message.Message,), dict(
@@ -604,14 +592,13 @@ WrapperMessage = _reflection.GeneratedProtocolMessageType('WrapperMessage', (_me
   ))
 _sym_db.RegisterMessage(WrapperMessage)
 
-<<<<<<< HEAD
 LogEntries = _reflection.GeneratedProtocolMessageType('LogEntries', (_message.Message,), dict(
   DESCRIPTOR = _LOGENTRIES,
   __module__ = 'RaftMessages_pb2'
   # @@protoc_insertion_point(class_scope:Raft.LogEntries)
   ))
 _sym_db.RegisterMessage(LogEntries)
-=======
+
 LogEntry = _reflection.GeneratedProtocolMessageType('LogEntry', (_message.Message,), dict(
   DESCRIPTOR = _LOGENTRY,
   __module__ = 'RaftMessages_pb2'
@@ -625,7 +612,6 @@ serverState = _reflection.GeneratedProtocolMessageType('serverState', (_message.
   # @@protoc_insertion_point(class_scope:Raft.serverState)
   ))
 _sym_db.RegisterMessage(serverState)
->>>>>>> FredAlphaDesign
 
 
 # @@protoc_insertion_point(module_scope)

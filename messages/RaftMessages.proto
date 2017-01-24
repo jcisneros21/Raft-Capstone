@@ -35,10 +35,10 @@ message AppendEntries {
   int32 toPort = 4;
   int32 term = 5;
   string info = 6;
-  int32 prevLogIndex = 6;
-  int32 prevLogTerm = 7;
-  repeated LogEntry entries = 8;  // entries to be committed
-  int32 leaderCommit = 9;
+  int32 prevLogIndex = 7;
+  int32 prevLogTerm = 8;
+  repeated LogEntry entries = 9;  // entries to be committed
+  int32 leaderCommit = 10;
 };
 
 message AppendReply {

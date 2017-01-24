@@ -61,35 +61,43 @@ class Server:
 
     def requestVotes(self):
         for server in self.NodeAddrs:
-            messageType,message = self.StateInfo.createVote()
+            messageType,message = self.StateInfo.requestVote()
             message.toAddr = server[0]
             message.toPort = server[1]
             self.sendMessage(messageType, message)
 
     def heartbeat(self):
+        randomText = self.StateInfo.randText()
         for server in self.NodeAddrs:
-            messageType,message = self.StateInfo.createHeartbeat()
+            messageType,message = self.StateInfo.sendHeartbeat()
+            message.info = randomText
             message.toAddr = server[0]
             message.toPort = server[1]
             self.sendMessage(messageType, message)
+        # Save the Heartbeat Message in the Leader's Log
+        if self.isLeader():
+            messageType, message = self.StateInfo.sendHeartbeat()
+            message.info = randomText
+            self.StateInfo.writeToLog(message)
         self.timer = threading.Timer(self.heartbeatTimeout, self.heartbeat)
         self.timer.start()
 
     def transition(self, state):
         successfulTransition = False
         if self.StateSemaphore.acquire(blocking=False):
+            savedLog = self.StateInfo.log
             print('Transitioning to ' + state)
             self.timer.cancel()
             if state == 'Follower':
-                self.StateInfo = State.FollowerState(self.StateInfo.term)
+                self.StateInfo = State.FollowerState(self.StateInfo.term, savedLog)
                 # init new election timer
                 self.resetTimer()
             elif state == 'Candidate':
-                self.StateInfo = State.CandidateState(self.StateInfo.term + 1)
+                self.StateInfo = State.CandidateState(self.StateInfo.term + 1, savedLog)
                 self.resetTimer()
                 self.requestVotes()
             elif state == 'Leader':
-                self.StateInfo = State.LeaderState(self.StateInfo.term)
+                self.StateInfo = State.LeaderState(self.StateInfo.term, savedLog)
                 self.heartbeat()
             self.StateSemaphore.release()
             successfulTransition = True
@@ -146,8 +154,8 @@ class Server:
 
         # for all servers in all states the first thing we need to check is
         # that our term number is not out of date
-        if self.commitIndex > self.lastApplied:
-            self.StateInfo.lastApplied += 1
+        #if self.commitIndex > self.lastApplied:
+            #self.StateInfo.lastApplied += 1
             #applyLogEntryToStateMachine(self.StateInfo.lastApplied)
         if innerMessage.term > self.StateInfo.term:
             print('Got a higher term number\n\n')
