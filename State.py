@@ -89,6 +89,7 @@ class State():
       print(entry.creationTerm)
       print(entry.logPosition)
       print()
+
   '''
   def readLog(self):
     log = protoc.LogEntries()
@@ -118,17 +119,11 @@ class LeaderState(State):
     State.__init__(self, term, currentLog)
     print('New Leader state. Term # {}'.format(self.term))
 
-  # Was sendHeartbeat
   def sendHeartbeat(self):
     message = protoc.AppendEntries()
-    # This is generating random text each time
-    # This is not what I want!!!!
-    # I need to have a set word to send to everyone
-    # message.info = self.randText()
     message.term = self.term
     message.prevLogIndex = self.lastApplied - 1
     message.leaderCommit = False
-    #self.initTimer()
     return protoc.APPENDENTRIES, message
 
   def handleMessage(self, messageType, message):
