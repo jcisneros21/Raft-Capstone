@@ -1,0 +1,14 @@
+So a client will ask any nodes in the network a question.
+ - question = command
+
+The node with this command will send this command to the leader
+The leader will then make an entry with this request and store it in its log
+ - remember that this entry will not be committed.
+He will then send this request out to all followers in the system.
+ - I think this message is an AppendEntry message which will hold the log entry message
+The followers will then recieve this request and store it into its log
+Once stored it will then send a reply to the leader stating it has stored the entry.
+The leader will recieve these messages and once a majority have sent these back the leader will commit.
+
+
+- My question is what happens if there are multiple request. Well the leader will 
