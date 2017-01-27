@@ -34,10 +34,11 @@ message AppendEntries {
   string toAddr = 3;
   int32 toPort = 4;
   int32 term = 5;
-  int32 prevLogIndex = 6;
-  int32 prevLogTerm = 7;
-  repeated LogEntry entries = 8;  // entries to be committed
-  int32 leaderCommit = 9;
+  string info = 6;
+  int32 prevLogIndex = 7;
+  int32 prevLogTerm = 8;
+  repeated LogEntry entries = 9;  // entries to be committed
+  int32 leaderCommit = 10;
 };
 
 message AppendReply {
@@ -57,9 +58,15 @@ message WrapperMessage {
   AppendReply arm = 5;
 };
 
+// Will be replaced with python dictionaries
+// This message will be deleted soon if not needed
+message LogEntries {
+  repeated AppendEntries entry = 1;
+}
+
 message LogEntry {
   bool committed = 1;
-  string data = 2;        // this is a placeholder for the command
+  // string data = 2;        // this is a placeholder for the command
   int32 creationTerm = 3;
   int32 logPosition = 4;  // this is the same as the key for this entry in the dict
 }

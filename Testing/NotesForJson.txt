@@ -1,0 +1,4 @@
+Serializing a message will not work
+There are functions that protocol buffer has for json:
+ - MessageToJson
+ - Parse
