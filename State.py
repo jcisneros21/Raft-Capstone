@@ -1,6 +1,7 @@
 import threading
 import RaftMessages_pb2 as protoc
 import random
+import json
 
 '''Only write to disk if I send a message
    writeToLog will save a message to a dictionary
@@ -11,7 +12,7 @@ import random
 '''
 
 class State():
-  def __init__(self, term, currentLog=None):
+  def __init__(self, term, logFile, currentLog=None):
     # How do I save a log once I transition?
     # I could make a copy of the log and insert it back
     # once I transition.
@@ -25,6 +26,7 @@ class State():
     self.commitIndex = 0
     # Current index of the log
     self.lastApplied = 0
+    self.logFile = logFile
 
   def replyAENACK(self, toAddr, toPort):
     message = protoc.AppendReply()
@@ -59,20 +61,29 @@ class State():
     return protoc.VOTERESULT, voteack
 
   def writeToLog(self, message):
-    entry = protoc.LogEntry()
-    entry.committed = False
-    entry.data = message.info
-    entry.creationTerm = message.term
-    entry.logPosition = message.prevLogIndex + 1
-    self.log[entry.logPosition] = entry
+    entry = {}
+    entry[committed] = False
+    entry[data] = message.info
+    entry[creationTerm] = message.term
+    entry[logPosition] = message.prevLogIndex + 1
+    self.log[str(entry.logPosition)] = entry
     self.lastApplied += 1
 
     if self.lastApplied == 20:
       self.printLog()
     return True
 
-  def readToLog(self, message, index):
-    return self.log[index]
+  # Question, do I return a log message or a dictionary
+  # I think a log message so the leader can send entries
+  # to other followers in the network
+  def readToLog(self, index):
+    entry = self.log[str(index)]
+    message = protoc.LogEntry()
+    message.committed = False
+    message.data = message.info
+    message.creationTerm = message.term
+    message.logPosition = message.prevLogIndex + 1
+    return message
  
   def nextIndex(self):
     pass
@@ -90,23 +101,13 @@ class State():
       print(entry.logPosition)
       print()
 
-  '''
-  def readLog(self):
-    log = protoc.LogEntries()
-    log_file = open("log.txt", "rb")
-    log.ParseFromString(log_file.read())
-    log_file.close()
+  def writeLogToFile(self):
+    with open(self.logFile, 'w') as fp:
+      json.dump(self.log,fp)
 
-    self.ListEntries(log)
-
-  def ListEntries(self, log):
-    i = 0
-    for entry in log.entry:
-      print()
-      i += 1
-      print("Entry #" + str(i))
-      print(entry.info)
-      print() '''
+  def readLogFromFile(self):
+    with open(self.logFile, 'r') as fp:
+      self.log = json.load(fp)
 
   def randText(self):
     word_file = "text.txt"
@@ -116,7 +117,7 @@ class State():
 
 class LeaderState(State):
   def __init__(self, term, currentLog=None):
-    State.__init__(self, term, currentLog)
+    State.__init__(self, term, currentLog, logFile)
     print('New Leader state. Term # {}'.format(self.term))
 
   def sendHeartbeat(self):
@@ -138,7 +139,7 @@ class LeaderState(State):
 
 class CandidateState(State):
   def __init__(self, term, currentLog=None):
-    State.__init__(self, term, currentLog)
+    State.__init__(self, term, currentLog, logFile)
     print('New Candidate state. Term # {}'.format(self.term))
     # Candidate has vote for himself
     self.votes = 1
@@ -170,7 +171,7 @@ class CandidateState(State):
 
 class FollowerState(State):
   def __init__(self, term, currentLog=None):
-    State.__init__(self, term, currentLog)
+    State.__init__(self, term, currentLog, logFile)
     print('New Follower state. Term # {}'.format(self.term))
     self.voted = False
 
