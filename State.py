@@ -76,7 +76,7 @@ class State():
   # Question, do I return a log message or a dictionary
   # I think a log message so the leader can send entries
   # to other followers in the network
-  def readToLog(self, index):
+  def readFromLog(self, index):
     entry = self.log[str(index)]
     message = protoc.LogEntry()
     message.committed = False
@@ -84,6 +84,11 @@ class State():
     message.creationTerm = message.term
     message.logPosition = message.prevLogIndex + 1
     return message
+
+  def removeEntry(self, index):
+    entry = self.readToLog(index)
+    del self.log[str(index)]
+    return entry
  
   def nextIndex(self):
     pass
