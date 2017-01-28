@@ -62,8 +62,7 @@ class State():
     voteack.granted = True
     return protoc.VOTERESULT, voteack
 
-  # Works with AppendEntries, need to change it
-  # Needs to parse LogEntry messages
+  # Parses a LogEntry Message to write to a log
   def writeToLog(self, message):
     entry = {}
     entry["committed"] = message.committed
@@ -128,13 +127,26 @@ class State():
 class LeaderState(State):
   def __init__(self, term, currentLog=None):
     State.__init__(self, term, currentLog, logFile)
+    # self.totalAppends = 0
+    self.totalFollowerIndex = {}
     print('New Leader state. Term # {}'.format(self.term))
+
+  def initializeFollowerIndex(self, addressLog):
+    for address in addressLog:
+      self.totalFollowerIndex[address] = (1,0)
+
+  def createAppendEntries(self, entries):
+    message = protoc.AppendEntries()
+    message.term = self.term
+    message.prevLogIndex = entries[0].logPosition - 1
+    message.prevLogTerm = entries[0].creationTerm
+    message.entries.extend(entries)
+    message.leaderCommit = self.commitIndex
+    return protoc.APPENDENTRIES, message
 
   def sendHeartbeat(self):
     message = protoc.AppendEntries()
     message.term = self.term
-    message.prevLogIndex = self.lastApplied - 1
-    message.leaderCommit = False
     return protoc.APPENDENTRIES, message
 
   def handleMessage(self, messageType, message):
@@ -143,10 +155,58 @@ class LeaderState(State):
       return self.sendVoteNACK(message.fromAddr, message.fromPort)
     elif messageType is protoc.APPENDENTRIES:
       return self.replyAENACK(message.fromAddr, message.fromPort)
-    #elif messageType is protoc.APPENDREPLY
+    elif messageType is protoc.APPENDREPLY:
+      if message.success:
+        index = (self.totalFollowerIndex[message.fromAddr][0] += 1, self.totalFollowerIndex[message.fromAddr][1] += 1)
+        self.totalFollowerIndex[message.fromAddr] = index
+      else:
+        index = (self.totalFollowerIndex[message.fromAddr][0] -= 1, self.totalFollowerIndex[message.fromAddr][1])
+        return self.createAppendEntries(self.createEntriesList(self.totalFollowerIndex[message.fromAddr][0]))
+      if self.commitEntry():
+        print("Committed shit.")
+      else:
+        print("Commit got FUCKED UP")
     else:
       return None, None
 
+  # creates list of log entries from logIndex to end of log
+  def createEntriesList(self, logIndex):
+    tempList = []
+    for i in range(logIndex, len(self.log)):
+      tempList.append(self.readFromLog(i))
+      
+    return tempList
+
+  def commitEntries(self):
+    minIndex = self.totalFollowerIndex[self.totalFollowerIndex.keys()[0]][1]
+    for entry in self.totalFollowerIndex.values():
+      if(minIndex > entry[1]):
+        minIndex = entry[1]
+   
+    total = 0
+    entryFound = False
+    highestIndex = minIndex
+    minIndex += 1
+    #trying to find HIGHEST index in log that has been replicated on a majority of nodes
+    while(minIndex < len(self.log))
+      for entry in self.totalFollowerIndex.values():
+        if(minIndex == entry[1]):
+          total += 1
+        if total > ((len(self.totalFollowerIndex)+1)//2):
+          highestIndex = minIndex
+    
+    if self.commitIndex < highestIndex and self.log[str(highestIndex)]["creationTerm"] == self.term:
+      for i in range(self.commitIndex, highestIndex + 1):
+        self.log[str(i)]["committed"] = True
+      self.commitIndex = highestIndex
+      return True
+    else:
+      return False
+      
+
+  # Create a logEntry with the data sent from a client
+  # After this is created, the leader should write it to its own
+  # log and then send it out to the network.
   def createLogEntry(self, data):
     message = protoc.LogEntry()
     message.committed = False
