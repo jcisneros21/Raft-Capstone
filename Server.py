@@ -12,6 +12,7 @@ class Server:
     def __init__(self):
         self.NodeAddrs = []
         self.Socket = None
+        self.logFileName = None
 
         # figure out who we need to listen for
         nodeaddrsfile = open('nodeaddrs.txt', 'r')
@@ -23,6 +24,8 @@ class Server:
             # if we just read our own address from the file
             if hostaddr == self.getownip():
                 self.addr = (hostaddr, socketnum)
+                self.logFileName = line.split(',')[2]
+                print("My address is {} and my logfile is {}".format(self.addr, self.logFileName))
             else:
                 self.NodeAddrs.append((hostaddr, socketnum))
 
@@ -155,8 +158,8 @@ class Server:
         # for all servers in all states the first thing we need to check is
         # that our term number is not out of date
         #if self.commitIndex > self.lastApplied:
-            #self.StateInfo.lastApplied += 1
-            #applyLogEntryToStateMachine(self.StateInfo.lastApplied)
+        #    self.StateInfo.lastApplied += 1
+        #    applyLogEntryToStateMachine(self.StateInfo.lastApplied)
         if innerMessage.term > self.StateInfo.term:
             print('Got a higher term number\n\n')
             self.StateInfo.term = innerMessage.term
@@ -186,4 +189,5 @@ class Server:
                     self.transition('Leader')
         elif self.isLeader():
             # until we implement logs we don't need to do anything here
-            pass
+            if replyMessageType is not None:
+                self.sendMessage(replyMessageType, replyMessage)

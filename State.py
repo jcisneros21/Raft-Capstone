@@ -89,10 +89,10 @@ class State():
     entry = self.readToLog(index)
     del self.log[str(index)]
     return entry
- 
+
   def nextIndex(self):
     pass
- 
+
   def matchIndex(self):
     pass
 
@@ -194,6 +194,19 @@ class FollowerState(State):
       if message.term < self.term:
         return self.replyAENACK(message.fromAddr, message.fromPort)
       else:
+        # why is this necessary? should this be done some other way?
         self.voted = False
+        if str(message.prevLogIndex) not in self.log:
+          return self.replyAENACK(message.fromAddr, message.fromPort)
+        else:
+          #if we have an entry at prevLogIndex, check to see if terms are different
+          if self.log[str(message.prevLogIndex)].term != message.prevLogTerm:
+            # we need to delete this entry and all that follow it
+            for i in range(message.prevLogIndex, self.lastApplied):
+              self.removeEntry(i)
+
+        # if we got here, append the new entry
         self.writeToLog(message)
+        if message.leaderCommit > self.commitIndex:
+            self.commitIndex = min(message.leaderCommit, message.entries[-1])
         return self.replyAEACK(message.fromAddr, message.fromPort)
