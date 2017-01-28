@@ -24,8 +24,10 @@ class State():
     self.term = term
     # Index of last Commited Entry
     self.commitIndex = 0
-    # Current index of the log
+    # Current index of last entry
     self.lastApplied = 0
+    # The next empty index in the log
+    self.nextIndex = 0
     self.logFile = logFile
 
   def replyAENACK(self, toAddr, toPort):
@@ -60,14 +62,17 @@ class State():
     voteack.granted = True
     return protoc.VOTERESULT, voteack
 
+  # Works with AppendEntries, need to change it
+  # Needs to parse LogEntry messages
   def writeToLog(self, message):
     entry = {}
-    entry[committed] = False
-    entry[data] = message.info
-    entry[creationTerm] = message.term
-    entry[logPosition] = message.prevLogIndex + 1
-    self.log[str(entry.logPosition)] = entry
-    self.lastApplied += 1
+    entry["committed"] = message.committed
+    entry["data"] = message.data
+    entry["creationTerm"] = message.creationTerm
+    entry["logPosition"] = message.logPosition
+    self.log[str(entry["logPosition"])] = entry
+    self.lastApplied = entry["logPosition"]
+    self.nextIndex += 1
 
     if self.lastApplied == 20:
       self.printLog()
@@ -141,6 +146,14 @@ class LeaderState(State):
     #elif messageType is protoc.APPENDREPLY
     else:
       return None, None
+
+  def createLogEntry(self, data):
+    message = protoc.LogEntry()
+    message.committed = False
+    message.data = data
+    message.creationTerm = self.term
+    message.logPosition = self.nextIndex
+    return message
 
 class CandidateState(State):
   def __init__(self, term, currentLog=None):
