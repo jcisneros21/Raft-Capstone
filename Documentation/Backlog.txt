@@ -38,4 +38,6 @@ Tasks:                                                        Rank:
 - May want to make a static variable of the python dictionary so it can be shared by all instances.
 - Serialize python dictionaries to JSON
 - Implement logic to delete entries in a log
-
+- Design or talk to Dr.Esposito about to present a demo of Raft
+- Write to a script/come up something to monitor the internal state of the algorithm for debugging purposes
+  - Find a way to show any updated entries inside the log and monitor the logs in general
