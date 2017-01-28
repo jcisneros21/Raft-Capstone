@@ -32,7 +32,7 @@ class Server:
         nodeaddrsfile.close()
 
         self.StateSemaphore = threading.Semaphore()
-        self.StateInfo = State.FollowerState(0)
+        self.StateInfo = State.FollowerState(0, self.logFileName)
 
         # init election timer and transition to CandidateState if it runs out
         self.electionTimeout = random.uniform(8, 10)

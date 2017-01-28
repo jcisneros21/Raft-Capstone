@@ -125,8 +125,8 @@ class State():
 
 
 class LeaderState(State):
-  def __init__(self, term, currentLog=None):
-    State.__init__(self, term, currentLog, logFile)
+  def __init__(self, term, logFile, currentLog=None):
+    State.__init__(self, term, logFile, currentLog)
     # self.totalAppends = 0
     self.totalFollowerIndex = {}
     print('New Leader state. Term # {}'.format(self.term))
@@ -157,10 +157,10 @@ class LeaderState(State):
       return self.replyAENACK(message.fromAddr, message.fromPort)
     elif messageType is protoc.APPENDREPLY:
       if message.success:
-        index = (self.totalFollowerIndex[message.fromAddr][0] += 1, self.totalFollowerIndex[message.fromAddr][1] += 1)
+        index = (self.totalFollowerIndex[message.fromAddr][0] + 1, self.totalFollowerIndex[message.fromAddr][1] + 1)
         self.totalFollowerIndex[message.fromAddr] = index
       else:
-        index = (self.totalFollowerIndex[message.fromAddr][0] -= 1, self.totalFollowerIndex[message.fromAddr][1])
+        index = (self.totalFollowerIndex[message.fromAddr][0] - 1, self.totalFollowerIndex[message.fromAddr][1])
         return self.createAppendEntries(self.createEntriesList(self.totalFollowerIndex[message.fromAddr][0]))
       if self.commitEntry():
         print("Committed shit.")
@@ -174,7 +174,7 @@ class LeaderState(State):
     tempList = []
     for i in range(logIndex, len(self.log)):
       tempList.append(self.readFromLog(i))
-      
+
     return tempList
 
   def commitEntries(self):
@@ -182,19 +182,19 @@ class LeaderState(State):
     for entry in self.totalFollowerIndex.values():
       if(minIndex > entry[1]):
         minIndex = entry[1]
-   
+
     total = 0
     entryFound = False
     highestIndex = minIndex
     minIndex += 1
     #trying to find HIGHEST index in log that has been replicated on a majority of nodes
-    while(minIndex < len(self.log))
+    while minIndex < len(self.log):
       for entry in self.totalFollowerIndex.values():
         if(minIndex == entry[1]):
           total += 1
         if total > ((len(self.totalFollowerIndex)+1)//2):
           highestIndex = minIndex
-    
+
     if self.commitIndex < highestIndex and self.log[str(highestIndex)]["creationTerm"] == self.term:
       for i in range(self.commitIndex, highestIndex + 1):
         self.log[str(i)]["committed"] = True
@@ -202,7 +202,7 @@ class LeaderState(State):
       return True
     else:
       return False
-      
+
 
   # Create a logEntry with the data sent from a client
   # After this is created, the leader should write it to its own
@@ -216,8 +216,8 @@ class LeaderState(State):
     return message
 
 class CandidateState(State):
-  def __init__(self, term, currentLog=None):
-    State.__init__(self, term, currentLog, logFile)
+  def __init__(self, term, logFile, currentLog=None):
+    State.__init__(self, term, logFile, currentLog)
     print('New Candidate state. Term # {}'.format(self.term))
     # Candidate has vote for himself
     self.votes = 1
@@ -248,8 +248,8 @@ class CandidateState(State):
     return protoc.REQUESTVOTE, message
 
 class FollowerState(State):
-  def __init__(self, term, currentLog=None):
-    State.__init__(self, term, currentLog, logFile)
+  def __init__(self, term, logFile, currentLog=None):
+    State.__init__(self, term, logFile, currentLog)
     print('New Follower state. Term # {}'.format(self.term))
     self.voted = False
 
