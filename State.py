@@ -209,4 +209,9 @@ class FollowerState(State):
         self.writeToLog(message)
         if message.leaderCommit > self.commitIndex:
             self.commitIndex = min(message.leaderCommit, message.entries[-1])
+            self.commitUpToIndex(self.commitIndex)
         return self.replyAEACK(message.fromAddr, message.fromPort)
+
+    def commitUpToIndex(self, index):
+      for i in range(self.commitIndex, index + 1):
+        self.log[str(i)]["commited"] = True
