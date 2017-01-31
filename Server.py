@@ -100,7 +100,7 @@ class Server:
                 self.resetTimer()
                 self.requestVotes()
             elif state == 'Leader':
-                self.StateInfo = State.LeaderState(self.StateInfo.term, savedLog)
+                self.StateInfo = State.LeaderState(self.StateInfo.term, self.NodeAddrs, savedLog)
                 self.heartbeat()
             self.StateSemaphore.release()
             successfulTransition = True

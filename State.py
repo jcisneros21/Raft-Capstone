@@ -125,15 +125,15 @@ class State():
 
 
 class LeaderState(State):
-  def __init__(self, term, logFile, currentLog=None):
+  def __init__(self, term, nodeAddrs, logFile, currentLog=None):
     State.__init__(self, term, logFile, currentLog)
-    # self.totalAppends = 0
     self.totalFollowerIndex = {}
+    self.initializeFollowerIndex(nodeAddrs)
     print('New Leader state. Term # {}'.format(self.term))
 
   def initializeFollowerIndex(self, addressLog):
     for address in addressLog:
-      self.totalFollowerIndex[address] = (1,0)
+      self.totalFollowerIndex[address[0]] = (1,0)
 
   def createAppendEntries(self, entries):
     message = protoc.AppendEntries()
