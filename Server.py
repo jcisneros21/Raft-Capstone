@@ -7,6 +7,7 @@ import re
 import State
 import random
 import math
+import queue
 
 class Server:
     def __init__(self):
@@ -33,6 +34,11 @@ class Server:
 
         self.StateSemaphore = threading.Semaphore()
         self.StateInfo = State.FollowerState(0, self.logFileName)
+
+        self.outgoingMessageQ = queue.Queue()
+        # start message queue handling thread
+        self.queueThread = threading.Thread(target=self.sendMessageThread)
+        self.queueThread.start()
 
         # start up client listener thread
         self.clientListener = threading.Thread(target=self.clientListenerThread)
@@ -71,7 +77,7 @@ class Server:
             messageType,message = self.StateInfo.requestVote()
             message.toAddr = server[0]
             message.toPort = server[1]
-            self.sendMessage(messageType, message)
+            self.outgoingMessageQ.put_nowait((messageType, message))
 
     def heartbeat(self):
         randomText = self.StateInfo.randText()
@@ -79,7 +85,7 @@ class Server:
             messageType,message = self.StateInfo.createAppendEntries()
             message.toAddr = server[0]
             message.toPort = server[1]
-            self.sendMessage(messageType, message)
+            self.outgoingMessageQ.put_nowait((messageType, message))
         self.timer = threading.Timer(self.heartbeatTimeout, self.heartbeat)
         self.timer.start()
 
@@ -113,23 +119,27 @@ class Server:
     def isLeader(self):
         return isinstance(self.StateInfo, State.LeaderState)
 
-    def sendMessage(self, messageType, message):
-        print('Sending {} message'.format(messageType))
-        message.fromAddr = self.addr[0]
-        message.fromPort = self.addr[1]
-        outgoingMessage = protoc.WrapperMessage()
-        outgoingMessage.type = messageType
+    def sendMessageThread(self):
+        while True:
+            messageTuple = self.outgoingMessageQ.get()
+            print('Sending {} message'.format(messageTuple[0]))
+            print('\n\nmessage.toAddr: {}\nmessage.toPort: {}\n\n'.format(messageTuple[1].toAddr, messageTuple[1].toPort))
+            messageTuple[1].fromAddr = self.addr[0]
+            messageTuple[1].fromPort = self.addr[1]
+            outgoingMessage = protoc.WrapperMessage()
+            outgoingMessage.type = messageTuple[0]
 
-        if messageType == protoc.REQUESTVOTE:
-            outgoingMessage.rvm.CopyFrom(message)
-        elif messageType == protoc.VOTERESULT:
-            outgoingMessage.vrm.CopyFrom(message)
-        elif messageType == protoc.APPENDENTRIES:
-            outgoingMessage.aem.CopyFrom(message)
-        elif messageType == protoc.APPENDREPLY:
-            outgoingMessage.arm.CopyFrom(message)
+            if messageTuple[0] == protoc.REQUESTVOTE:
+                outgoingMessage.rvm.CopyFrom(messageTuple[1])
+            elif messageTuple[0] == protoc.VOTERESULT:
+                outgoingMessage.vrm.CopyFrom(messageTuple[1])
+            elif messageTuple[0] == protoc.APPENDENTRIES:
+                outgoingMessage.aem.CopyFrom(messageTuple[1])
+            elif messageTuple[0] == protoc.APPENDREPLY:
+                outgoingMessage.arm.CopyFrom(messageTuple[1])
 
-        self.Socket.sendto(outgoingMessage.SerializeToString(), (message.toAddr, message.toPort))
+            print("Sending to {} port {}".format(messageTuple[1].toAddr, messageTuple[1].toPort))
+            self.Socket.sendto(outgoingMessage.SerializeToString(), (messageTuple[1].toAddr, messageTuple[1].toPort))
 
     def messageHandler(self, messageData):
         # first thing we do is parse the message data
@@ -172,11 +182,11 @@ class Server:
             # leaders
             if replyMessageType == protoc.APPENDREPLY and replyMessage.success:
                 self.resetTimer()
-            self.sendMessage(replyMessageType, replyMessage)
+            self.outgoingMessageQ.put_nowait((replyMessageType, replyMessage))
         elif self.isCandidate():
             # if we have something to send then just need to send it
             if replyMessageType is not None:
-                self.sendMessage(replyMessageType, replyMessage)
+                self.outgoingMessageQ.put_nowait((replyMessageType, replyMessage))
             else:
                 # otherwise we got a vote result or a heartbeat
                 if self.StateInfo.heardFromLeader:
@@ -188,7 +198,8 @@ class Server:
         elif self.isLeader():
             # until we implement logs we don't need to do anything here
             if replyMessageType is not None:
-                self.sendMessage(replyMessageType, replyMessage)
+                self.outgoingMessageQ.put_nowait((replyMessageType, replyMessage))
+                #self.sendMessage(replyMessageType, replyMessage)
 
     def clientListenerThread(self):
         while True:
@@ -199,4 +210,7 @@ class Server:
                 for server in self.NodeAddrs:
                     outgoingMessage.toAddr = server[0]
                     outgoingMessage.toPort = server[1]
-                    self.sendMessage(messageType, outgoingMessage)
+                    self.outgoingMessageQ.put_nowait((messageType, outgoingMessage))
+            elif self.isFollower() and clientCommand.strip() == 'printlog':
+                print("I'm in printlog!!!!!!!!!!!!!!\n\n")
+                self.StateInfo.printLog()
