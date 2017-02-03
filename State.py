@@ -101,14 +101,8 @@ class State():
     pass
 
   def printLog(self):
-    for i in range(0, self.lastApplied):
-      entry = self.log[i]
-      print()
-      print(entry.committed)
-      print(entry.data)
-      print(entry.creationTerm)
-      print(entry.logPosition)
-      print()
+    for key in self.log.keys():
+        print("committed: {}\ndata: {}\n creationTerm: {}\nlogPosition: {}\n\n".format(log[key]['committed'], log[key]['data'], log[key]['creationTerm'], log[key]['logPosition']))
 
   def writeLogToFile(self):
     with open(self.logFile, 'w') as fp:
@@ -293,7 +287,7 @@ class FollowerState(State):
           if self.log[str(message.prevLogIndex)].term != message.prevLogTerm:
             return self.replyAENACK(message.fromAddr, message.fromPort)
 
-        if len(entries > 0):
+        if len(entries) > 0:
             for entry in message.entries:
               if self.log[str(entry.logPosition)].creationTerm != entry.creationTerm:
                 deleteFromIndex(entry.logPosition)
