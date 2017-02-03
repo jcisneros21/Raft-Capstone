@@ -43,6 +43,7 @@ class State():
     message.toAddr = toAddr
     message.toPort = toPort
     message.term = self.term
+    #message.replyingToEntry = reply       #Need to specify if we are replying to an entry
     message.success = True
     return protoc.APPENDREPLY, message
 
@@ -135,6 +136,7 @@ class LeaderState(State):
     for address in addressLog:
       self.totalFollowerIndex[address[0]] = (1,0)
 
+  # This should be called 
   def createAppendEntries(self, entries):
     message = protoc.AppendEntries()
     message.term = self.term
@@ -144,8 +146,11 @@ class LeaderState(State):
     message.leaderCommit = self.commitIndex
     return protoc.APPENDENTRIES, message
 
+  # 1) Send Heartbeats
+  # Create AppendEntries where the Server Sends it to all nodes in the network
+  # Leader writes it to his own log and sends messages to all followers
   def sendHeartbeat(self):
-    message = protoc.AppendEntries()
+    messageType, message = protoc.AppendEntries()
     message.term = self.term
     return protoc.APPENDENTRIES, message
 
@@ -279,7 +284,11 @@ class FollowerState(State):
               self.removeEntry(i)
 
         # if we got here, append the new entry
-        self.writeToLog(message)
+        # Right now we have it as all appendEntries being written to logs
+        # self.writeToLog(message)
+        if len(message.entries) > 0:
+           # Need to update it where it loops through each entry
+           self.writeToLog(message)
         if message.leaderCommit > self.commitIndex:
             self.commitIndex = min(message.leaderCommit, message.entries[-1])
             self.commitUpToIndex(self.commitIndex)
