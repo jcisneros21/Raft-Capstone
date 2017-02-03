@@ -128,8 +128,16 @@ class Server:
             outgoingMessage.aem.CopyFrom(message)
         elif messageType == protoc.APPENDREPLY:
             outgoingMessage.arm.CopyFrom(message)
-
-        self.Socket.sendto(outgoingMessage.SerializeToString(), (message.toAddr, message.toPort))
+        
+        print("This is the MessageType {}".format(messageType))
+        print("This is Addr!!!!!!!!")
+        print("here we go")
+        print(message.toAddr)
+        print("This is Protttttttt!!!!!!")
+        print(message.toPort)
+        
+        if(message.toAddr is not "" or  message.toPort is not 0):
+            self.Socket.sendto(outgoingMessage.SerializeToString(), (message.toAddr, message.toPort))
 
     def messageHandler(self, messageData):
         # first thing we do is parse the message data
@@ -193,10 +201,26 @@ class Server:
     def clientListenerThread(self):
         while True:
             clientCommand = sys.stdin.readline()
+            print(clientCommand)
             if self.isLeader():
+                print("This is Leader")
                 messageType,logEntryMessage = self.StateInfo.createLogEntry(clientCommand)
-                messageType,outgoingMessage = self.StateInfo.createAppendEntries([logEntryMessage,])
+                messageType,outgoingMessage = self.StateInfo.createAppendEntries([logEntryMessage])
+                print(messageType)
+                print("hello")
+                print()
+                print()
+                print(self.NodeAddrs)
+                i = 0
                 for server in self.NodeAddrs:
+                    print("This is the number of times " + str(i))
+                    print("This is server!!!!!!!!")
+                    print(server)
+                    print()
+                    print(server[0])
+                    print(server[1])
+                    print()
                     outgoingMessage.toAddr = server[0]
                     outgoingMessage.toPort = server[1]
                     self.sendMessage(messageType, outgoingMessage)
+                    i += 1
