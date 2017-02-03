@@ -84,10 +84,10 @@ class State():
   def readFromLog(self, index):
     entry = self.log[str(index)]
     message = protoc.LogEntry()
-    message.committed = False
-    message.data = message.info
-    message.creationTerm = message.term
-    message.logPosition = message.prevLogIndex + 1
+    message.committed = entry["committed"]
+    message.data = entry["data"]
+    message.creationTerm = entry["creationTerm"]
+    message.logPosition = entry["logPosition"]
     return message
 
   def removeEntry(self, index):
@@ -136,13 +136,20 @@ class LeaderState(State):
     for address in addressLog:
       self.totalFollowerIndex[address[0]] = (1,0)
 
-  # This should be called 
-  def createAppendEntries(self, entries):
+  def createAppendEntries(self, entries=[]):
     message = protoc.AppendEntries()
     message.term = self.term
-    message.prevLogIndex = entries[0].logPosition - 1
-    message.prevLogTerm = entries[0].creationTerm
-    message.entries.extend(entries)
+
+    if len(entries) == 0:
+      message.prevLogIndex = self.lastApplied
+      if self.lastApplied == 0:
+        message.prevLogTerm = 0
+      else:
+        message.prevLogTerm = self.log[self.lastApplied].term
+    else:
+      message.prevLogIndex = entries[0].logPosition - 1
+      message.prevLogTerm = entries[0].creationTerm
+      message.entries.extend(entries)
     message.leaderCommit = self.commitIndex
     return protoc.APPENDENTRIES, message
 
@@ -157,22 +164,27 @@ class LeaderState(State):
   def handleMessage(self, messageType, message):
     print('Leader got messageType {} from {}'.format(messageType, message.fromAddr))
     if messageType is protoc.REQUESTVOTE:
-      return self.sendVoteNACK(message.fromAddr, message.fromPort)
+      # this most likely means we transitioned before we received all vote results
+      # just drop the message
+      return None,None
     elif messageType is protoc.APPENDENTRIES:
       return self.replyAENACK(message.fromAddr, message.fromPort)
     elif messageType is protoc.APPENDREPLY:
       if message.success:
         index = (self.totalFollowerIndex[message.fromAddr][0] + 1, self.totalFollowerIndex[message.fromAddr][1] + 1)
         self.totalFollowerIndex[message.fromAddr] = index
+        return None,None
       else:
         index = (self.totalFollowerIndex[message.fromAddr][0] - 1, self.totalFollowerIndex[message.fromAddr][1])
         return self.createAppendEntries(self.createEntriesList(self.totalFollowerIndex[message.fromAddr][0]))
-      if self.commitEntry():
-        print("Committed shit.")
-      else:
-        print("Commit got FUCKED UP")
-    else:
-      return None, None
+
+      if self.lastApplied > 0:
+        if self.commitEntries():
+          print("committed shit")
+        else:
+          print("didnt commit shit")
+
+    return None, None
 
   # creates list of log entries from logIndex to end of log
   def createEntriesList(self, logIndex):
@@ -183,7 +195,10 @@ class LeaderState(State):
     return tempList
 
   def commitEntries(self):
-    minIndex = self.totalFollowerIndex[self.totalFollowerIndex.keys()[0]][1]
+    # Step 1: Find smallest match index of all servers
+    # here were grabbing the current match index of the first server
+    minIndex = self.totalFollowerIndex[list(self.totalFollowerIndex.keys())[0]][1]
+    # standard find minimum loop
     for entry in self.totalFollowerIndex.values():
       if(minIndex > entry[1]):
         minIndex = entry[1]
@@ -208,7 +223,6 @@ class LeaderState(State):
     else:
       return False
 
-
   # Create a logEntry with the data sent from a client
   # After this is created, the leader should write it to its own
   # log and then send it out to the network.
@@ -218,7 +232,8 @@ class LeaderState(State):
     message.data = data
     message.creationTerm = self.term
     message.logPosition = self.nextIndex
-    return message
+    self.writeToLog(message)
+    return protoc.LOGENTRY, message
 
 class CandidateState(State):
   def __init__(self, term, logFile, currentLog=None):
@@ -271,29 +286,40 @@ class FollowerState(State):
     elif messageType == protoc.APPENDENTRIES:
       if message.term < self.term:
         return self.replyAENACK(message.fromAddr, message.fromPort)
+      if message.prevLogIndex == 0 and message.prevLogTerm == 0:
+        # we got the first heartbeat and our log should not exist
+        return self.replyAEACK(message.fromAddr, message.fromPort)
       else:
-        # why is this necessary? should this be done some other way?
-        self.voted = False
-        if str(message.prevLogIndex) not in self.log:
+        # at this point we know something should be in our log so do our normal checks
+        if message.prevLogIndex not in self.log.keys():
           return self.replyAENACK(message.fromAddr, message.fromPort)
         else:
-          #if we have an entry at prevLogIndex, check to see if terms are different
           if self.log[str(message.prevLogIndex)].term != message.prevLogTerm:
-            # we need to delete this entry and all that follow it
-            for i in range(message.prevLogIndex, self.lastApplied):
-              self.removeEntry(i)
+            return self.replyAENACK(message.fromAddr, message.fromPort)
 
-        # if we got here, append the new entry
-        # Right now we have it as all appendEntries being written to logs
-        # self.writeToLog(message)
-        if len(message.entries) > 0:
-           # Need to update it where it loops through each entry
-           self.writeToLog(message)
+        if len(entries > 0):
+            for entry in message.entries:
+              if self.log[str(entry.logPosition)].creationTerm != entry.creationTerm:
+                deleteFromIndex(entry.logPosition)
+            
+            print()
+            print(message.entries)
+            for entry in message.entries:
+              for i in range(0,5):
+                print()
+              print("This is entry")
+              print(entry.data)
+              self.writeToLog(entry)
+
         if message.leaderCommit > self.commitIndex:
-            self.commitIndex = min(message.leaderCommit, message.entries[-1])
-            self.commitUpToIndex(self.commitIndex)
+          commitUpToIndex(entries[-1].logPosition)
+
         return self.replyAEACK(message.fromAddr, message.fromPort)
 
     def commitUpToIndex(self, index):
       for i in range(self.commitIndex, index + 1):
         self.log[str(i)]["commited"] = True
+
+    def deleteFromIndex(self, index):
+      for i in range(index, self.lastApplied + 1):
+        self.removeEntry(i)

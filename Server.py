@@ -34,6 +34,10 @@ class Server:
         self.StateSemaphore = threading.Semaphore()
         self.StateInfo = State.FollowerState(0, self.logFileName)
 
+        # start up client listener thread
+        self.clientListener = threading.Thread(target=self.clientListenerThread)
+        self.clientListener.start()
+
         # init election timer and transition to CandidateState if it runs out
         self.electionTimeout = random.uniform(8, 10)
         self.timer = threading.Timer(self.electionTimeout, self.transition, ('Candidate',))
@@ -72,16 +76,10 @@ class Server:
     def heartbeat(self):
         randomText = self.StateInfo.randText()
         for server in self.NodeAddrs:
-            messageType,message = self.StateInfo.sendHeartbeat()
-            message.info = randomText
+            messageType,message = self.StateInfo.createAppendEntries()
             message.toAddr = server[0]
             message.toPort = server[1]
             self.sendMessage(messageType, message)
-        # Save the Heartbeat Message in the Leader's Log
-        if self.isLeader():
-            messageType, message = self.StateInfo.sendHeartbeat()
-            message.info = randomText
-            self.StateInfo.writeToLog(message)
         self.timer = threading.Timer(self.heartbeatTimeout, self.heartbeat)
         self.timer.start()
 
@@ -191,3 +189,14 @@ class Server:
             # until we implement logs we don't need to do anything here
             if replyMessageType is not None:
                 self.sendMessage(replyMessageType, replyMessage)
+
+    def clientListenerThread(self):
+        while True:
+            clientCommand = sys.stdin.readline()
+            if self.isLeader():
+                messageType,logEntryMessage = self.StateInfo.createLogEntry(clientCommand)
+                messageType,outgoingMessage = self.StateInfo.createAppendEntries([logEntryMessage,])
+                for server in self.NodeAddrs:
+                    outgoingMessage.toAddr = server[0]
+                    outgoingMessage.toPort = server[1]
+                    self.sendMessage(messageType, outgoingMessage)
