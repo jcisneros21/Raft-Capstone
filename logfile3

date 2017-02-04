@@ -1,0 +1,1 @@
+{"0": {"committed": false, "logPosition": 0, "data": "test\n", "creationTerm": 1}, "-1": {"committed": false, "logPosition": -1, "data": "poop in a hat", "creationTerm": 0}}{"0": {"committed": false, "logPosition": 0, "data": "test\n", "creationTerm": 2}, "-1": {"committed": true, "logPosition": -1, "data": "poop in a hat", "creationTerm": 0}}
