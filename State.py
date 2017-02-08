@@ -134,6 +134,7 @@ class LeaderState(State):
     message = protoc.AppendEntries()
     message.term = self.term
 
+    print("Create entries is being called")
     if len(entries) == 0:
       message.prevLogIndex = self.lastApplied
       if self.lastApplied == 0:
@@ -145,6 +146,7 @@ class LeaderState(State):
       message.prevLogTerm = entries[0].creationTerm
       message.entries.extend(entries)
     message.leaderCommit = self.commitIndex
+    print("\n\n\n" + str(message) + "\n\n\n")
     return protoc.APPENDENTRIES, message
 
   # 1) Send Heartbeats
@@ -170,6 +172,7 @@ class LeaderState(State):
         return None,None
       else:
         index = (self.totalFollowerIndex[message.fromAddr][0] - 1, self.totalFollowerIndex[message.fromAddr][1])
+        # What is this?
         return self.createAppendEntries(self.createEntriesList(self.totalFollowerIndex[message.fromAddr][0]))
 
       if self.lastApplied > 0:
@@ -278,17 +281,22 @@ class FollowerState(State):
         return self.sendVoteACK(message.fromAddr, message.fromPort)
     # If AppendEntries Message is Recieved
     elif messageType == protoc.APPENDENTRIES:
+      print("\n\n\n\n")
       if message.term < self.term:
+        print("If message.term is lower than self.term")
         return self.replyAENACK(message.fromAddr, message.fromPort)
       if message.prevLogIndex == 0 and message.prevLogTerm == 0:
+        print("If prevLogIndex == 0 and message.prevLogTerm")
         # we got the first heartbeat and our log should not exist
         return self.replyAEACK(message.fromAddr, message.fromPort)
       else:
         # at this point we know something should be in our log so do our normal checks
         if message.prevLogIndex not in self.log.keys():
+          print("prevLogIndex not in self.log.key")
           return self.replyAENACK(message.fromAddr, message.fromPort)
         else:
           if self.log[str(message.prevLogIndex)].term != message.prevLogTerm:
+            print("In the else in Follower")
             return self.replyAENACK(message.fromAddr, message.fromPort)
 
         if len(entries) > 0:
