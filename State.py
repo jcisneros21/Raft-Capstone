@@ -2,6 +2,7 @@ import threading
 import RaftMessages_pb2 as protoc
 import random
 import json
+import os
 
 '''Only write to disk if I send a message
    writeToLog will save a message to a dictionary
@@ -19,13 +20,19 @@ class State():
     # I could read from file
     if currentLog is None:
       self.log = {}
+      sentinel = {}
+      sentinel["committed"] = False
+      sentinel["data"] = "poop in a hat"
+      sentinel["creationTerm"] = 0
+      sentinel["logPosition"] = -1
+      self.log["-1"] = sentinel    # sentinel value so that we can properly handle first entry
     else:
       self.log = currentLog
     self.term = term
     # Index of last Commited Entry
-    self.commitIndex = 0
+    self.commitIndex = -1
     # Current index of last entry
-    self.lastApplied = 0
+    self.lastApplied = -1
     # The next empty index in the log
     self.nextIndex = 0
     self.logFile = logFile
@@ -36,6 +43,7 @@ class State():
     message.toPort = toPort
     message.term = self.term
     message.success = False
+    message.matchIndex = self.lastApplied
     return protoc.APPENDREPLY, message
 
   def replyAEACK(self, toAddr, toPort):
@@ -44,6 +52,7 @@ class State():
     message.toPort = toPort
     message.term = self.term
     message.success = True
+    message.matchIndex = self.lastApplied
     return protoc.APPENDREPLY, message
 
   def sendVoteNACK(self, toAddr, toPort):
@@ -73,6 +82,7 @@ class State():
     self.lastApplied = entry["logPosition"]
     self.nextIndex += 1
 
+    self.writeLogToFile()
     if self.lastApplied == 20:
       self.printLog()
     return True
@@ -83,10 +93,10 @@ class State():
   def readFromLog(self, index):
     entry = self.log[str(index)]
     message = protoc.LogEntry()
-    message.committed = False
-    message.data = message.info
-    message.creationTerm = message.term
-    message.logPosition = message.prevLogIndex + 1
+    message.committed = entry["committed"]
+    message.data = entry["data"]
+    message.creationTerm = entry["creationTerm"]
+    message.logPosition = entry["logPosition"]
     return message
 
   def removeEntry(self, index):
@@ -102,11 +112,16 @@ class State():
 
   def printLog(self):
     for key in self.log.keys():
-        print("committed: {}\ndata: {}\n creationTerm: {}\nlogPosition: {}\n\n".format(log[key]['committed'], log[key]['data'], log[key]['creationTerm'], log[key]['logPosition']))
+        print("committed: {}\ndata: {}\n creationTerm: {}\nlogPosition: {}\n\n".format(self.log[key]['committed'], self.log[key]['data'], self.log[key]['creationTerm'], self.log[key]['logPosition']))
 
   def writeLogToFile(self):
-    with open(self.logFile, 'w') as fp:
-      json.dump(self.log,fp)
+    if not os.path.isfile(self.logFile):
+      # if the log file does not exist yet
+      with open(self.logFile, 'w') as fp:
+        json.dump(self.log, fp)
+    else:
+      with open(self.logFile, 'a') as fp:
+        json.dump(self.log, fp)
 
   def readLogFromFile(self):
     with open(self.logFile, 'r') as fp:
@@ -129,16 +144,18 @@ class LeaderState(State):
     for address in addressLog:
       self.totalFollowerIndex[address[0]] = (1,0)
 
-  def createAppendEntries(self, entries=[]):
+  def createAppendEntries(self, toAddr, toPort, entries=[]):
     message = protoc.AppendEntries()
+    message.toAddr = toAddr
+    message.toPort = toPort
     message.term = self.term
 
     if len(entries) == 0:
       message.prevLogIndex = self.lastApplied
-      if self.lastApplied == 0:
-        message.prevLogTerm = 0
+      if self.lastApplied == -1:
+        message.prevLogTerm = -1
       else:
-        message.prevLogTerm = self.log[self.lastApplied].term
+        message.prevLogTerm = self.log[str(self.lastApplied)]["creationTerm"]
     else:
       message.prevLogIndex = entries[0].logPosition - 1
       message.prevLogTerm = entries[0].creationTerm
@@ -161,14 +178,17 @@ class LeaderState(State):
       return self.replyAENACK(message.fromAddr, message.fromPort)
     elif messageType is protoc.APPENDREPLY:
       if message.success:
-        index = (self.totalFollowerIndex[message.fromAddr][0] + 1, self.totalFollowerIndex[message.fromAddr][1] + 1)
-        self.totalFollowerIndex[message.fromAddr] = index
-        return None,None
+        print("Got a successful appendentries")
+        if (message.matchIndex > self.totalFollowerIndex[message.fromAddr][1]):
+          index = (self.totalFollowerIndex[message.fromAddr][0] + 1, self.totalFollowerIndex[message.fromAddr][1] + 1)
+          self.totalFollowerIndex[message.fromAddr] = index
       else:
+        print("Got a bad appendentries")
         index = (self.totalFollowerIndex[message.fromAddr][0] - 1, self.totalFollowerIndex[message.fromAddr][1])
-        return self.createAppendEntries(self.createEntriesList(self.totalFollowerIndex[message.fromAddr][0]))
+        self.totalFollowerIndex[message.fromAddr] = index
+        return self.createAppendEntries(message.fromAddr, message.fromPort, self.createEntriesList(self.totalFollowerIndex[message.fromAddr][0]))
 
-      if self.lastApplied > 0:
+      if self.lastApplied > -1:
         if self.commitEntries():
           print("committed shit")
         else:
@@ -179,7 +199,7 @@ class LeaderState(State):
   # creates list of log entries from logIndex to end of log
   def createEntriesList(self, logIndex):
     tempList = []
-    for i in range(logIndex, len(self.log)):
+    for i in range(logIndex, (len(self.log)-1)):
       tempList.append(self.readFromLog(i))
 
     return tempList
@@ -197,14 +217,18 @@ class LeaderState(State):
     entryFound = False
     highestIndex = minIndex
     minIndex += 1
+    print("\n{}\n".format(self.totalFollowerIndex))
     #trying to find HIGHEST index in log that has been replicated on a majority of nodes
     while minIndex < len(self.log):
       for entry in self.totalFollowerIndex.values():
         if(minIndex == entry[1]):
           total += 1
-        if total > ((len(self.totalFollowerIndex)+1)//2):
+        if total >= ((len(self.totalFollowerIndex)+1)//2):
           highestIndex = minIndex
+      total = 0
+      minIndex += 1
 
+    print("highest index: {}\ncommit index: {}".format(highestIndex, self.commitIndex))
     if self.commitIndex < highestIndex and self.log[str(highestIndex)]["creationTerm"] == self.term:
       for i in range(self.commitIndex, highestIndex + 1):
         self.log[str(i)]["committed"] = True
@@ -236,8 +260,7 @@ class CandidateState(State):
   def handleMessage(self, messageType, message):
     print('Candidate got messageType {} from {}'.format(messageType, message.fromAddr))
     if messageType == protoc.REQUESTVOTE:
-      if message.term > self.term:
-        return self.sendVoteNACK(message.fromAddr, message.fromPort)
+      return self.sendVoteNACK(message.fromAddr, message.fromPort)
     elif messageType == protoc.VOTERESULT:
       print('Message.granted = {}'.format(message.granted))
       if message.granted:
@@ -264,7 +287,6 @@ class FollowerState(State):
     self.voted = False
 
   def handleMessage(self, messageType, message):
-    print('Follower got messageType {} from {}'.format(messageType, message.fromAddr))
     # If RequestVote Message is Recieved
     if messageType == protoc.REQUESTVOTE:
       if self.voted:
@@ -275,35 +297,39 @@ class FollowerState(State):
     # If AppendEntries Message is Recieved
     elif messageType == protoc.APPENDENTRIES:
       if message.term < self.term:
+        print("message.term < self.term")
         return self.replyAENACK(message.fromAddr, message.fromPort)
-      if message.prevLogIndex == 0 and message.prevLogTerm == 0:
-        # we got the first heartbeat and our log should not exist
-        return self.replyAEACK(message.fromAddr, message.fromPort)
-      else:
         # at this point we know something should be in our log so do our normal checks
-        if message.prevLogIndex not in self.log.keys():
-          return self.replyAENACK(message.fromAddr, message.fromPort)
-        else:
-          if self.log[str(message.prevLogIndex)].term != message.prevLogTerm:
+      if str(message.prevLogIndex) not in self.log.keys():
+        print("str(message.prevLogIndex) = {}, log.keys() = {}".format(message.prevLogIndex, self.log.keys()))
+        return self.replyAENACK(message.fromAddr, message.fromPort)
+      else:
+        if message.prevLogIndex != -1: #if we're dealing with the first entry, don't do this
+          if self.log[str(message.prevLogIndex)]["creationTerm"] != message.prevLogTerm:
+            print("log creation term != message.prevLogTerm")
             return self.replyAENACK(message.fromAddr, message.fromPort)
 
-        if len(entries) > 0:
-            for entry in message.entries:
-              if self.log[str(entry.logPosition)].creationTerm != entry.creationTerm:
-                deleteFromIndex(entry.logPosition)
+      if len(message.entries) > 0:
+        print("entries = {}".format(message.entries))
+        for entry in message.entries:
+          if str(message.prevLogIndex) not in self.log.keys():
+            if self.log[str(entry.logPosition)]["creationTerm"] != entry.creationTerm:
+              deleteFromIndex(entry.logPosition)
 
-            for entry in message.entries:
-              self.writeToLog(entry)
+        for entry in message.entries:
+          self.writeToLog(entry)
 
-        if message.leaderCommit > self.commitIndex:
-          commitUpToIndex(entries[-1].logPosition)
+      if message.leaderCommit > self.commitIndex:
+        self.commitUpToIndex(message.leaderCommit)
 
-        return self.replyAEACK(message.fromAddr, message.fromPort)
+      return self.replyAEACK(message.fromAddr, message.fromPort)
 
-    def commitUpToIndex(self, index):
-      for i in range(self.commitIndex, index + 1):
-        self.log[str(i)]["commited"] = True
+  def commitUpToIndex(self, index):
+    print("In commitUpToIndex")
+    for i in range(self.commitIndex, index + 1):
+      print("committing log index {}".format(i))
+      self.log[str(i)]["committed"] = True
 
-    def deleteFromIndex(self, index):
-      for i in range(index, self.lastApplied + 1):
-        self.removeEntry(i)
+  def deleteFromIndex(self, index):
+    for i in range(index, self.lastApplied + 1):
+      self.removeEntry(i)
