@@ -48,6 +48,7 @@ message AppendReply {
   int32 toPort = 4;
   int32 term = 5;
   bool success = 6;     // true if follower contained entry matching prevLogIndex and prevLogTerm
+  int32 matchIndex = 7;
 };
 
 message WrapperMessage {
