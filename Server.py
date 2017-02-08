@@ -122,6 +122,7 @@ class Server:
     def sendMessageThread(self):
         while True:
             messageTuple = self.outgoingMessageQ.get()
+            print(str(messageTuple[1]))
             print('Sending {} message'.format(messageTuple[0]))
             print('\n\nmessage.toAddr: {}\nmessage.toPort: {}\n\n'.format(messageTuple[1].toAddr, messageTuple[1].toPort))
             messageTuple[1].fromAddr = self.addr[0]
@@ -176,7 +177,7 @@ class Server:
         # if the term number is valid, the normal rules for the current state
         # apply
         replyMessageType, replyMessage = self.StateInfo.handleMessage(messageType, innerMessage)
-
+        
         if self.isFollower():
             # only responsibility is to respond to messages from Candidates and
             # leaders
@@ -198,32 +199,24 @@ class Server:
         elif self.isLeader():
             # until we implement logs we don't need to do anything here
             if replyMessageType is not None:
+                # Where are we adding the sending IP and port
+                # This is the problem!!!!!!
+                replyMessage.toAddr = innerMessage.fromAddr
+                replyMessage.toPort = innerMessage.fromPort
                 self.outgoingMessageQ.put_nowait((replyMessageType, replyMessage))
                 #self.sendMessage(replyMessageType, replyMessage)
 
     def clientListenerThread(self):
         while True:
             clientCommand = sys.stdin.readline()
-            print(clientCommand)
             if self.isLeader():
-                print("This is Leader")
                 messageType,logEntryMessage = self.StateInfo.createLogEntry(clientCommand)
                 messageType,outgoingMessage = self.StateInfo.createAppendEntries([logEntryMessage])
-                print(messageType)
-                print("hello")
-                print()
-                print()
-                print(self.NodeAddrs)
+                i = 0
                 for server in self.NodeAddrs:
-                    print("This is server!!!!!!!!")
-                    print(server)
-                    print()
-                    print(server[0])
-                    print(server[1])
-                    print()
+                    i += 1
                     outgoingMessage.toAddr = server[0]
                     outgoingMessage.toPort = server[1]
                     self.outgoingMessageQ.put_nowait((messageType, outgoingMessage))
             elif self.isFollower() and clientCommand.strip() == 'printlog':
-                print("I'm in printlog!!!!!!!!!!!!!!\n\n")
                 self.StateInfo.printLog()
