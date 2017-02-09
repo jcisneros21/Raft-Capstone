@@ -206,13 +206,13 @@ class LeaderState(State):
           print("Got a successful appendentries\n")
         # If the Follower has appended a LogEntry, update that Follower's commit and match index
         if (message.matchIndex > self.totalFollowerIndex[message.fromAddr][1]):
-          index = (self.totalFollowerIndex[message.fromAddr][0] + 1, self.totalFollowerIndex[message.fromAddr][1] + 1)
+          index = (self.totalFollowerIndex[message.fromAddr][0] + 1, message.matchIndex)
           self.totalFollowerIndex[message.fromAddr] = index
       else:
         if self.StateFlag:
           print("Got a bad appendentries\n")
         # Send the Follower missing LogEntries
-        index = (self.totalFollowerIndex[message.fromAddr][0] - 1, self.totalFollowerIndex[message.fromAddr][1])
+        index = (self.totalFollowerIndex[message.fromAddr][0] - 1, message.matchIndex)
         self.totalFollowerIndex[message.fromAddr] = index
         return self.createAppendEntries(message.fromAddr, message.fromPort, self.createEntriesList(self.totalFollowerIndex[message.fromAddr][0]))
 

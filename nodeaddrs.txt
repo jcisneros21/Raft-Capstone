@@ -1,3 +1,5 @@
 10.0.0.1,9000,logfile1.txt
 10.0.0.2,9001,logfile2.txt
 10.0.0.3,9002,logfile3.txt
+10.0.0.4,9003,logfile4.txt
+10.0.0.5,9004,logfile5.txt
