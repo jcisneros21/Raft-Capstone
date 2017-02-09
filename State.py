@@ -4,21 +4,15 @@ import random
 import json
 import os
 
-'''Only write to disk if I send a message
-   writeToLog will save a message to a dictionary
-   readFromLog will read from dictionary
-   We need to have a function where the instance
-   of this algorithm will call on startup to
-   extract the log that had been saved.
+''' The State Class is an Abstract Class that holds certain
+    functionality that will be passed on to its children.
 '''
 
 class State():
   def __init__(self, term, logFile, currentLog=None):
-    # How do I save a log once I transition?
-    # I could make a copy of the log and insert it back
-    # once I transition.
-    # I could read from file
+    
     if currentLog is None:
+      print("Creating New Log")
       self.log = {}
       sentinel = {}
       sentinel["committed"] = False
@@ -26,17 +20,30 @@ class State():
       sentinel["creationTerm"] = 0
       sentinel["logPosition"] = -1
       self.log["-1"] = sentinel    # sentinel value so that we can properly handle first entry
+      self.commitIndex = -1
+      self.lastApplied = -1
+      self.nextIndex = 0
     else:
       self.log = currentLog
+      # Index of last Commited Entry
+      self.commitIndex = self.findLastCommit(self.log)
+      # Current index of last entry
+      self.lastApplied = len(self.log) - 2
+      # The next empty index in the log
+      self.nextIndex = len(self.log) - 1
     self.term = term
-    # Index of last Commited Entry
-    self.commitIndex = -1
-    # Current index of last entry
-    self.lastApplied = -1
-    # The next empty index in the log
-    self.nextIndex = 0
     self.logFile = logFile
+    self.StateFlag = False
 
+  def findLastCommit(self, log):
+    indexCommitted = 0
+    for i in (-1, len(log)-2):
+      if log[str(i)]['committed'] is True:
+        indexCommitted = i
+    return indexCommitted
+        
+  
+  # Reply False to AppendEntry Message
   def replyAENACK(self, toAddr, toPort):
     message = protoc.AppendReply()
     message.toAddr = toAddr
@@ -45,17 +52,18 @@ class State():
     message.success = False
     message.matchIndex = self.lastApplied
     return protoc.APPENDREPLY, message
-
+  
+  # Reply True to AppendEntry Message
   def replyAEACK(self, toAddr, toPort):
     message = protoc.AppendReply()
     message.toAddr = toAddr
     message.toPort = toPort
     message.term = self.term
-    #message.replyingToEntry = reply       #Need to specify if we are replying to an entry
     message.success = True
     message.matchIndex = self.lastApplied
     return protoc.APPENDREPLY, message
 
+  # Reply False to VoteRequest Message
   def sendVoteNACK(self, toAddr, toPort):
     voteack = protoc.VoteResult()
     voteack.toAddr = toAddr
@@ -64,6 +72,7 @@ class State():
     voteack.granted = False
     return protoc.VOTERESULT, voteack
 
+  # Reply True to VoteRequest Message
   def sendVoteACK(self, toAddr, toPort):
     voteack = protoc.VoteResult()
     voteack.toAddr = toAddr
@@ -72,7 +81,7 @@ class State():
     voteack.granted = True
     return protoc.VOTERESULT, voteack
 
-  # Parses a LogEntry Message to write to a log
+  # Stores a Dictionary of a LogEntry Message into a Log
   def writeToLog(self, message):
     entry = {}
     entry["committed"] = message.committed
@@ -82,15 +91,9 @@ class State():
     self.log[str(entry["logPosition"])] = entry
     self.lastApplied = entry["logPosition"]
     self.nextIndex += 1
-
-    self.writeLogToFile()
-    if self.lastApplied == 20:
-      self.printLog()
     return True
 
-  # Question, do I return a log message or a dictionary
-  # I think a log message so the leader can send entries
-  # to other followers in the network
+  # Return an indexed LogEntry Message
   def readFromLog(self, index):
     entry = self.log[str(index)]
     message = protoc.LogEntry()
@@ -100,21 +103,30 @@ class State():
     message.logPosition = entry["logPosition"]
     return message
 
+  # Remove a LogEntry from the Log
   def removeEntry(self, index):
     entry = self.readToLog(index)
     del self.log[str(index)]
     return entry
-
+  
+  # TO-DO
   def nextIndex(self):
     pass
 
   def matchIndex(self):
     pass
 
+  
+  # Prints the Log for Testing Purposes
   def printLog(self):
-    for key in self.log.keys():
-        print("committed: {}\ndata: {}\n creationTerm: {}\nlogPosition: {}\n\n".format(self.log[key]['committed'], self.log[key]['data'], self.log[key]['creationTerm'], self.log[key]['logPosition']))
+    for i in range(-1,self.lastApplied+1):
+      entry = self.log[str(i)]
+      print("committed: {}".format(entry['committed']))
+      print("data: {}".format(entry['data']))
+      print("creationTerm: {}".format(entry['creationTerm']))
+      print("logPosition: {}\n".format(entry['logPosition']))
 
+  # Writes the Log to the logFile stated
   def writeLogToFile(self):
     if not os.path.isfile(self.logFile):
       # if the log file does not exist yet
@@ -124,95 +136,107 @@ class State():
       with open(self.logFile, 'a') as fp:
         json.dump(self.log, fp)
 
+  # Extracts a Saved Log from logFile 
   def readLogFromFile(self):
     with open(self.logFile, 'r') as fp:
       self.log = json.load(fp)
 
-  def randText(self):
-    word_file = "text.txt"
-    words = open(word_file).read().split()
-    return random.choice(words)
-
+''' The Leader State will initiate communication with all other
+    Follower States on the network. This communication involves
+    sending Heartbeat Messages to provide confirmation that there
+    is a leader present and sending AppendEntry Messages to append
+    and commit a LogEntry to logs. The Leader State is the only
+    allowed State to create LogEntry Messages to store and send
+    on the network.
+'''
 
 class LeaderState(State):
-  def __init__(self, term, nodeAddrs, logFile, currentLog=None):
+  def __init__(self, term, nodeAddrs, logFile, currentLog):
     State.__init__(self, term, logFile, currentLog)
+    print()
+    print(currentLog)
+    print()
     self.totalFollowerIndex = {}
     self.initializeFollowerIndex(nodeAddrs)
-    print('New Leader state. Term # {}'.format(self.term))
+    print('New Leader state. Term # {}\n'.format(self.term))
 
+  # Initializes all Follower's commit index and match index
   def initializeFollowerIndex(self, addressLog):
     for address in addressLog:
       self.totalFollowerIndex[address[0]] = (1,0)
 
+  # Creates the AppendEntries Messages for the server
+  # Heartbeats are AppendEntry Messages without LogEntry Messages
   def createAppendEntries(self, toAddr, toPort, entries=[]):
     message = protoc.AppendEntries()
     message.toAddr = toAddr
     message.toPort = toPort
     message.term = self.term
-
-    print("Create entries is being called")
+    
+    # Send a Heartbeat Message
     if len(entries) == 0:
       message.prevLogIndex = self.lastApplied
       if self.lastApplied == -1:
         message.prevLogTerm = -1
       else:
         message.prevLogTerm = self.log[str(self.lastApplied)]["creationTerm"]
+    # Send a AppendEntry Message
     else:
       message.prevLogIndex = entries[0].logPosition - 1
       message.prevLogTerm = entries[0].creationTerm
       message.entries.extend(entries)
     message.leaderCommit = self.commitIndex
-    print("\n\n\n" + str(message) + "\n\n\n")
     return protoc.APPENDENTRIES, message
 
-  # 1) Send Heartbeats
-  # Create AppendEntries where the Server Sends it to all nodes in the network
-  # Leader writes it to his own log and sends messages to all followers
-  def sendHeartbeat(self):
-    messageType, message = protoc.AppendEntries()
-    message.term = self.term
-    return protoc.APPENDENTRIES, message
-
+  # Handles incoming Messages from other states on the network
   def handleMessage(self, messageType, message):
-    print('Leader got messageType {} from {}'.format(messageType, message.fromAddr))
+    if self.StateFlag:
+      print('Leader got messageType {} from {}\n'.format(messageType, message.fromAddr))
+   
+    # Leader should reject any messages from Candidates
     if messageType is protoc.REQUESTVOTE:
-      # this most likely means we transitioned before we received all vote results
-      # just drop the message
       return None,None
+    # Leader should reject any messages from other Leaders
     elif messageType is protoc.APPENDENTRIES:
       return self.replyAENACK(message.fromAddr, message.fromPort)
+    # Retrieve a Message from a Follower
     elif messageType is protoc.APPENDREPLY:
       if message.success:
-        print("Got a successful appendentries")
+        if self.StateFlag:
+          print("Got a successful appendentries\n")
+        # If the Follower has appended a LogEntry, update that Follower's commit and match index
         if (message.matchIndex > self.totalFollowerIndex[message.fromAddr][1]):
           index = (self.totalFollowerIndex[message.fromAddr][0] + 1, self.totalFollowerIndex[message.fromAddr][1] + 1)
           self.totalFollowerIndex[message.fromAddr] = index
       else:
-        print("Got a bad appendentries")
+        if self.StateFlag:
+          print("Got a bad appendentries\n")
+        # Send the Follower missing LogEntries
         index = (self.totalFollowerIndex[message.fromAddr][0] - 1, self.totalFollowerIndex[message.fromAddr][1])
         self.totalFollowerIndex[message.fromAddr] = index
         return self.createAppendEntries(message.fromAddr, message.fromPort, self.createEntriesList(self.totalFollowerIndex[message.fromAddr][0]))
 
+      # Test to commit LogEntries
       if self.lastApplied > -1:
         if self.commitEntries():
-          print("committed shit")
+          if self.StateFlag:
+            print("committed shit")
         else:
-          print("didnt commit shit")
+          if self.StateFlag:
+            print("didnt commit shit")
 
     return None, None
 
-  # creates list of log entries from logIndex to end of log
+  # Create a list of entries beginning with the given index to the current index of the log 
   def createEntriesList(self, logIndex):
     tempList = []
     for i in range(logIndex, (len(self.log)-1)):
       tempList.append(self.readFromLog(i))
-
     return tempList
 
+  # Commit Logic for the LogEntry Messages 
   def commitEntries(self):
-    # Step 1: Find smallest match index of all servers
-    # here were grabbing the current match index of the first server
+ 
     minIndex = self.totalFollowerIndex[list(self.totalFollowerIndex.keys())[0]][1]
     # standard find minimum loop
     for entry in self.totalFollowerIndex.values():
@@ -223,7 +247,8 @@ class LeaderState(State):
     entryFound = False
     highestIndex = minIndex
     minIndex += 1
-    print("\n{}\n".format(self.totalFollowerIndex))
+    if self.StateFlag:
+      print("\n{}\n".format(self.totalFollowerIndex))
     #trying to find HIGHEST index in log that has been replicated on a majority of nodes
     while minIndex < len(self.log):
       for entry in self.totalFollowerIndex.values():
@@ -234,7 +259,8 @@ class LeaderState(State):
       total = 0
       minIndex += 1
 
-    print("highest index: {}\ncommit index: {}".format(highestIndex, self.commitIndex))
+    if self.StateFlag:
+      print("highest index: {}\ncommit index: {}\n".format(highestIndex, self.commitIndex))
     if self.commitIndex < highestIndex and self.log[str(highestIndex)]["creationTerm"] == self.term:
       for i in range(self.commitIndex, highestIndex + 1):
         self.log[str(i)]["committed"] = True
@@ -243,9 +269,7 @@ class LeaderState(State):
     else:
       return False
 
-  # Create a logEntry with the data sent from a client
-  # After this is created, the leader should write it to its own
-  # log and then send it out to the network.
+  # Creates a logEntry Message with the data the user enters
   def createLogEntry(self, data):
     message = protoc.LogEntry()
     message.committed = False
@@ -255,24 +279,37 @@ class LeaderState(State):
     self.writeToLog(message)
     return protoc.LOGENTRY, message
 
+''' The Candidate State handles the voting process to transition
+    into a Leader. Once a Candidate has arised, it will create 
+    RequestVote Messages to send to all Followers on the network. 
+    It should then recieve VoteReply Messages to store the number 
+    of successful votes it recieves. Once it reacieves a majority 
+    of votes from the network, it will then transition to Leader.
+'''
+
 class CandidateState(State):
   def __init__(self, term, logFile, currentLog=None):
     State.__init__(self, term, logFile, currentLog)
-    print('New Candidate state. Term # {}'.format(self.term))
-    # Candidate has vote for himself
+    print('New Candidate state. Term # {}\n'.format(self.term))
+    # Candidate will always vote for himself
     self.votes = 1
     self.heardFromLeader = False
 
   def handleMessage(self, messageType, message):
-    print('Candidate got messageType {} from {}'.format(messageType, message.fromAddr))
+    if self.StateFlag:
+      print('Candidate got messageType {} from {}\n'.format(messageType, message.fromAddr))
+    # Reply False to other VoteRequest Messages since the Candidate has already voted
     if messageType == protoc.REQUESTVOTE:
       return self.sendVoteNACK(message.fromAddr, message.fromPort)
+    # Stores the VoteResult Messages
     elif messageType == protoc.VOTERESULT:
-      print('Message.granted = {}'.format(message.granted))
+      if self.StateFlag:
+        print('Message.granted = {}\n'.format(message.granted))
       if message.granted:
         self.votes += 1
-        print('applied vote. new vote count is {}'.format(self.votes))
+        print('applied vote. new vote count is {}\n'.format(self.votes))
       return None,None
+    # Reply False to any AppendEntry Messages
     elif messageType == protoc.APPENDENTRIES:
       if message.term < self.term:
         return self.replyAENACK(message.fromAddr, message.fromPort)
@@ -281,10 +318,12 @@ class CandidateState(State):
         # from someone who won the election
         return None, None
 
+  # Creates RequestVote Messages
   def requestVote(self):
     message = protoc.RequestVote()
     message.term = self.term
     return protoc.REQUESTVOTE, message
+
 
 class FollowerState(State):
   def __init__(self, term, logFile, currentLog=None):
@@ -302,25 +341,29 @@ class FollowerState(State):
         return self.sendVoteACK(message.fromAddr, message.fromPort)
     # If AppendEntries Message is Recieved
     elif messageType == protoc.APPENDENTRIES:
-      print("\n\n\n\n")
       if message.term < self.term:
-        print("message.term < self.term")
+        if self.StateFlag:
+          print("message.term < self.term")
         return self.replyAENACK(message.fromAddr, message.fromPort)
         # at this point we know something should be in our log so do our normal checks
       if str(message.prevLogIndex) not in self.log.keys():
-        print("str(message.prevLogIndex) = {}, log.keys() = {}".format(message.prevLogIndex, self.log.keys()))
+        if self.StateFlag:
+          print("str(message.prevLogIndex) = {}, log.keys() = {}".format(message.prevLogIndex, self.log.keys()))
         return self.replyAENACK(message.fromAddr, message.fromPort)
       else:
         if message.prevLogIndex != -1: #if we're dealing with the first entry, don't do this
           if self.log[str(message.prevLogIndex)]["creationTerm"] != message.prevLogTerm:
-            print("log creation term != message.prevLogTerm")
+            if self.StateFlag:
+              print("log creation term != message.prevLogTerm")
             return self.replyAENACK(message.fromAddr, message.fromPort)
 
       if len(message.entries) > 0:
-        print("entries = {}".format(message.entries))
+        if self.StateFlag:
+          print("entries = {}".format(message.entries))
         for entry in message.entries:
           if str(message.prevLogIndex) not in self.log.keys():
             if self.log[str(entry.logPosition)]["creationTerm"] != entry.creationTerm:
+              print("\nDeleting Entry\n")
               deleteFromIndex(entry.logPosition)
 
         for entry in message.entries:
@@ -332,9 +375,11 @@ class FollowerState(State):
       return self.replyAEACK(message.fromAddr, message.fromPort)
 
   def commitUpToIndex(self, index):
-    print("In commitUpToIndex")
+    if self.StateFlag:
+      print("In commitUpToIndex")
     for i in range(self.commitIndex, index + 1):
-      print("committing log index {}".format(i))
+      if self.StateFlag:
+        print("committing log index {}".format(i))
       self.log[str(i)]["committed"] = True
 
   def deleteFromIndex(self, index):
