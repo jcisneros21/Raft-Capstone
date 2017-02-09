@@ -14,6 +14,7 @@ class Server:
         self.NodeAddrs = []
         self.Socket = None
         self.logFileName = None
+        self.ServerFlag = True
 
         # figure out who we need to listen for
         nodeaddrsfile = open('nodeaddrs.txt', 'r')
@@ -80,7 +81,6 @@ class Server:
             self.outgoingMessageQ.put_nowait((messageType, message))
 
     def heartbeat(self):
-        randomText = self.StateInfo.randText()
         for server in self.NodeAddrs:
             messageType,message = self.StateInfo.createAppendEntries(server[0], server[1])
             self.outgoingMessageQ.put_nowait((messageType, message))
@@ -91,7 +91,8 @@ class Server:
         successfulTransition = False
         if self.StateSemaphore.acquire(blocking=False):
             savedLog = self.StateInfo.log
-            print('Transitioning to ' + state)
+            if self.ServerFlag:
+                print('Transitioning to ' + state)
             self.timer.cancel()
             if state == 'Follower':
                 self.StateInfo = State.FollowerState(self.StateInfo.term, self.logFileName, savedLog)
@@ -120,7 +121,9 @@ class Server:
     def sendMessageThread(self):
         while True:
             messageTuple = self.outgoingMessageQ.get()
-            print('Sending {} message'.format(messageTuple[0]))
+            if self.ServerFlag:
+                print(str(messageTuple[1]))
+                print('Sending {} message'.format(messageTuple[0]))
             messageTuple[1].fromAddr = self.addr[0]
             messageTuple[1].fromPort = self.addr[1]
             outgoingMessage = protoc.WrapperMessage()
@@ -165,14 +168,15 @@ class Server:
         #    self.StateInfo.lastApplied += 1
         #    applyLogEntryToStateMachine(self.StateInfo.lastApplied)
         if innerMessage.term > self.StateInfo.term:
-            print('Got a higher term number\n\n')
+            if self.ServerFlag:
+              print('Got a higher term number\n\n')
             self.StateInfo.term = innerMessage.term
             self.transition('Follower')
 
         # if the term number is valid, the normal rules for the current state
         # apply
         replyMessageType, replyMessage = self.StateInfo.handleMessage(messageType, innerMessage)
-
+        
         if self.isFollower():
             # only responsibility is to respond to messages from Candidates and
             # leaders
@@ -194,16 +198,31 @@ class Server:
         elif self.isLeader():
             # until we implement logs we don't need to do anything here
             if replyMessageType is not None:
+                # Where are we adding the sending IP and port
+                # This is the problem!!!!!!
+                replyMessage.toAddr = innerMessage.fromAddr
+                replyMessage.toPort = innerMessage.fromPort
                 self.outgoingMessageQ.put_nowait((replyMessageType, replyMessage))
                 #self.sendMessage(replyMessageType, replyMessage)
 
     def clientListenerThread(self):
         while True:
             clientCommand = sys.stdin.readline()
+            print()
             if clientCommand.strip() == 'printlog':
                 self.StateInfo.printLog()
+            elif clientCommand.strip() == '-s':
+                if self.ServerFlag:
+                    self.ServerFlag = False
+                else:
+                    self.ServerFlag = True
+            elif clientCommand.strip() == '-l':
+                if self.StateInfo.StateFlag:
+                   self.StateInfo.StateFlag = False
+                else:
+                   self.StateInfo.StateFlag = True
             elif self.isLeader():
-                messageType,logEntryMessage = self.StateInfo.createLogEntry(clientCommand)
+                messageType,logEntryMessage = self.StateInfo.createLogEntry(clientCommand.strip())
                 for server in self.NodeAddrs:
                     messageType,outgoingMessage = self.StateInfo.createAppendEntries(server[0], server[1], [logEntryMessage,])
                     self.outgoingMessageQ.put_nowait((messageType, outgoingMessage))

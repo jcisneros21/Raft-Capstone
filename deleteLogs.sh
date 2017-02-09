@@ -1,0 +1,5 @@
+rm "logfile1.txt"
+rm "logfile2.txt"
+rm "logfile3.txt"
+rm "logfile4.txt"
+rm "logfile5.txt"
