@@ -26,7 +26,7 @@ class Server:
             # if we just read our own address from the file
             if hostaddr == self.getownip():
                 self.addr = (hostaddr, socketnum)
-                self.logFileName = line.split(',')[2]
+                self.logFileName = line.split(',')[2].strip()
                 print("My address is {} and my logfile is {}".format(self.addr, self.logFileName))
             else:
                 self.NodeAddrs.append((hostaddr, socketnum))

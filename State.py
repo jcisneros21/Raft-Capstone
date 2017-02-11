@@ -10,10 +10,15 @@ import os
 
 class State():
   def __init__(self, term, logFile, currentLog=None):
-    
-    if currentLog is None:
+    self.term = term
+    self.logFile = logFile
+    self.StateFlag = False
+    self.log = {}
+    readFile = self.readLogFromFile()
+    # If the log is not written too
+    if not readFile and currentLog is None:
       print("Creating New Log")
-      self.log = {}
+      #self.log = {}
       sentinel = {}
       sentinel["committed"] = False
       sentinel["data"] = "poop in a hat"
@@ -24,24 +29,29 @@ class State():
       self.lastApplied = -1
       self.nextIndex = 0
     else:
-      self.log = currentLog
+      if not readFile:
+        self.log = currentLog
       # Index of last Commited Entry
       self.commitIndex = self.findLastCommit(self.log)
+      higherTerm = self.findHighestTerm(self.log)
+      if higherTerm > self.term:
+        self.term = higherTerm 
       # Current index of last entry
       self.lastApplied = len(self.log) - 2
       # The next empty index in the log
       self.nextIndex = len(self.log) - 1
-    self.term = term
-    self.logFile = logFile
-    self.StateFlag = False
 
   def findLastCommit(self, log):
-    indexCommitted = 0
-    for i in (-1, len(log)-2):
+    indexCommitted = -1
+    for i in range(-1, len(log)-2):
       if log[str(i)]['committed'] is True:
         indexCommitted = i
     return indexCommitted
-        
+
+  # Is it a problem if the algorithm is not erasing any entries if the current term is less?
+  def findHighestTerm(self, log):
+    lastIndex = len(log) - 2
+    return log[str(lastIndex)]['creationTerm']       
   
   # Reply False to AppendEntry Message
   def replyAENACK(self, toAddr, toPort):
@@ -91,6 +101,7 @@ class State():
     self.log[str(entry["logPosition"])] = entry
     self.lastApplied = entry["logPosition"]
     self.nextIndex += 1
+    self.writeLogToFile()
     return True
 
   # Return an indexed LogEntry Message
@@ -133,13 +144,24 @@ class State():
       with open(self.logFile, 'w') as fp:
         json.dump(self.log, fp)
     else:
-      with open(self.logFile, 'a') as fp:
+      with open(self.logFile, 'w') as fp:
         json.dump(self.log, fp)
 
   # Extracts a Saved Log from logFile 
   def readLogFromFile(self):
-    with open(self.logFile, 'r') as fp:
-      self.log = json.load(fp)
+    try:
+      with open(self.logFile, 'r') as fp:
+        print("It read the file")
+        self.log = json.load(fp)
+    except ValueError:
+        print("There was an error")
+        return False
+
+    print("This is the length of the log: {}".format(len(self.log)))
+    if(len(self.log) > 0):
+      return True
+    else:
+      return False
 
 ''' The Leader State will initiate communication with all other
     Follower States on the network. This communication involves
@@ -262,6 +284,7 @@ class LeaderState(State):
     if self.StateFlag:
       print("highest index: {}\ncommit index: {}\n".format(highestIndex, self.commitIndex))
     if self.commitIndex < highestIndex and self.log[str(highestIndex)]["creationTerm"] == self.term:
+      print("Went into the last step of commit logic")
       for i in range(self.commitIndex, highestIndex + 1):
         self.log[str(i)]["committed"] = True
       self.commitIndex = highestIndex
