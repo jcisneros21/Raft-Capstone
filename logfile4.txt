@@ -8,49 +8,13 @@
   "0": {
     "committed": true,
     "creationTerm": 1,
-    "data": "adding",
+    "data": "new entry",
     "logPosition": 0
   },
   "1": {
     "committed": true,
     "creationTerm": 1,
-    "data": "new",
+    "data": "second entry",
     "logPosition": 1
-  },
-  "2": {
-    "committed": true,
-    "creationTerm": 1,
-    "data": "entry",
-    "logPosition": 2
-  },
-  "3": {
-    "committed": true,
-    "creationTerm": 2,
-    "data": "add",
-    "logPosition": 3
-  },
-  "4": {
-    "committed": true,
-    "creationTerm": 3,
-    "data": "overwrite",
-    "logPosition": 4
-  },
-  "5": {
-    "committed": true,
-    "creationTerm": 3,
-    "data": "overwrite",
-    "logPosition": 5
-  },
-  "6": {
-    "committed": true,
-    "creationTerm": 3,
-    "data": "more",
-    "logPosition": 6
-  },
-  "7": {
-    "committed": true,
-    "creationTerm": 3,
-    "data": "more",
-    "logPosition": 7
   }
 }

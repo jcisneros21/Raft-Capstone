@@ -16,6 +16,7 @@ class Server:
         self.Socket = None
         self.logFileName = None
         self.ServerFlag = False
+        self.TimerFlag = True
 
         # figure out who we need to listen for
         nodeaddrsfile = open('nodeaddrs.txt', 'r')
@@ -67,7 +68,8 @@ class Server:
     def resetTimer(self):
         self.timer.cancel()
         self.selectElectionTimeoutValue()
-        print("Election Timeout Value: {}\n".format(self.electionTimeout))
+        if self.TimerFlag:
+            print("Election Timeout Value: {}\n".format(self.electionTimeout))
         self.timer = threading.Timer(self.electionTimeout, self.transition, ['Candidate',])
         self.timer.start()
 
@@ -207,7 +209,6 @@ class Server:
                 replyMessage.toAddr = innerMessage.fromAddr
                 replyMessage.toPort = innerMessage.fromPort
                 self.outgoingMessageQ.put_nowait((replyMessageType, replyMessage))
-                #self.sendMessage(replyMessageType, replyMessage)
 
     def clientListenerThread(self):
         while True:
@@ -222,16 +223,11 @@ class Server:
                     self.ServerFlag = False
                 else:
                     self.ServerFlag = True
-            elif clientCommand.strip() == '-l':
-                if self.StateInfo.StateFlag:
-                   self.StateInfo.StateFlag = False
+            elif clientCommand.strip() == '-timer':
+                if self.TimerFlag:
+                    self.TimerFlag = False
                 else:
-                   self.StateInfo.StateFlag = True
-            elif clientCommand.strip() == '-c':
-                if self.StateInfo.commitFlag:
-                   self.StateInfo.commitFlag = False
-                else:
-                   self.StateInfo.commitFlag = True
+                    self.TimerFlag = True
             elif clientCommand.strip() == '-clear':
                 for i in range(0,40):
                     print()
