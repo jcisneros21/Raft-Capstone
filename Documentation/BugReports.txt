@@ -6,3 +6,6 @@ Syntax for listing Bug:
   - Not-Fixed/Fixed
 
 
+- If there are no logs and if there are only two agents on the network, it will   commit the first entry without a consensus.
+
+- 

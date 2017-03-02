@@ -12,35 +12,36 @@ class State():
   def __init__(self, term, logFile, currentLog=None):
     self.term = term
     self.logFile = logFile
-    self.StateFlag = False
     self.log = {}
     readFile = self.readLogFromFile()
-    # If the log is not written too
+    
+    higherTerm = self.readTermNumber()
+    if higherTerm > self.term:
+      self.term = higherTerm
+
+    # If no log has been passed or been read, create a new log
     if not readFile and currentLog is None:
-      print("Creating New Log")
-      #self.log = {}
       sentinel = {}
-      sentinel["committed"] = False
-      sentinel["data"] = "poop in a hat"
+      sentinel["committed"] = True
+      sentinel["data"] = ""
       sentinel["creationTerm"] = 0
       sentinel["logPosition"] = -1
-      self.log["-1"] = sentinel    # sentinel value so that we can properly handle first entry
+      self.log["-1"] = sentinel    
       self.commitIndex = -1
       self.lastApplied = -1
       self.nextIndex = 0
     else:
+      # If Log was not read, then use passed in log
       if not readFile:
         self.log = currentLog
       # Index of last Commited Entry
       self.commitIndex = self.findLastCommit(self.log)
-      higherTerm = self.findHighestTerm(self.log)
-      if higherTerm > self.term:
-        self.term = higherTerm 
-      # Current index of last entry
+      # Index of last added LogEntry
       self.lastApplied = len(self.log) - 2
       # The next empty index in the log
       self.nextIndex = len(self.log) - 1
 
+  # Find the latest index that has been committed
   def findLastCommit(self, log):
     indexCommitted = -1
     for i in range(-1, len(log)-2):
@@ -48,7 +49,7 @@ class State():
         indexCommitted = i
     return indexCommitted
 
-  # Is it a problem if the algorithm is not erasing any entries if the current term is less?
+  # Finds the highest Term Number in the logs
   def findHighestTerm(self, log):
     lastIndex = len(log) - 2
     return log[str(lastIndex)]['creationTerm']       
@@ -91,6 +92,39 @@ class State():
     voteack.granted = True
     return protoc.VOTERESULT, voteack
 
+  # Retrieve file for saving Term Number
+  def getTermFile(self, logfile):
+    filename = ''
+    if('1' in logfile):
+      filename = 'state1.txt'
+    elif('2' in logfile):
+      filename = 'state2.txt'
+    elif('3' in logfile):
+      filename = 'state3.txt'
+    elif('4' in logfile):
+      filename = 'state4.txt'
+    elif('5' in logfile):
+      filename = 'state5.txt'
+    return filename
+
+  # Save Term Number to file
+  def saveTermNumber(self):
+    filename = self.getTermFile(self.logFile)
+    with open(filename, 'w+') as fp:
+      fp.write(str(self.term))
+
+  # Retrieve Term Number from file
+  def readTermNumber(self):
+    termNumber = 0
+    filename = self.getTermFile(self.logFile)
+    try:
+      with open(filename, 'r') as fp:
+        for line in fp:
+          termNumber = int(line.split()[0])
+      return termNumber
+    except FileNotFoundError as e:
+      return 0
+
   # Stores a Dictionary of a LogEntry Message into a Log
   def writeToLog(self, message):
     entry = {}
@@ -116,54 +150,53 @@ class State():
 
   # Remove a LogEntry from the Log
   def removeEntry(self, index):
-    entry = self.readToLog(index)
+    entry = self.readFromLog(index)
     del self.log[str(index)]
+    self.lastApplied -= 1
+    self.nextIndex -= 1
     return entry
-  
-  # TO-DO
-  def nextIndex(self):
-    pass
-
-  def matchIndex(self):
-    pass
-
   
   # Prints the Log for Testing Purposes
   def printLog(self):
-    for i in range(-1,self.lastApplied+1):
+    for i in range(0,len(self.log)-1):
       entry = self.log[str(i)]
       print("committed: {}".format(entry['committed']))
       print("data: {}".format(entry['data']))
       print("creationTerm: {}".format(entry['creationTerm']))
       print("logPosition: {}\n".format(entry['logPosition']))
 
+  # Prints certain logEntry in the log
+  def printLogEntry(self, index):
+    entry = self.log[str(index)]
+    print("committed: {}".format(entry['committed']))
+    print("data: {}".format(entry['data']))
+    print("creationTerm: {}".format(entry['creationTerm']))
+    print("logPosition: {}\n".format(entry['logPosition']))  
+
   # Writes the Log to the logFile stated
   def writeLogToFile(self):
-    if not os.path.isfile(self.logFile):
-      # if the log file does not exist yet
-      with open(self.logFile, 'w') as fp:
-        json.dump(self.log, fp)
-    else:
-      with open(self.logFile, 'w') as fp:
-        json.dump(self.log, fp)
+    with open(self.logFile, 'w+') as fp:
+      json.dump(self.log, fp, sort_keys=True, indent=2, separators=(',',': '))
 
   # Extracts a Saved Log from logFile 
   def readLogFromFile(self):
+    if not os.path.isfile(self.logFile):
+      f = open(self.logFile, 'w+')
+      f.close()
+      
     try:
       with open(self.logFile, 'r') as fp:
-        print("It read the file")
         self.log = json.load(fp)
     except ValueError:
-        print("There was an error")
         return False
 
-    print("This is the length of the log: {}".format(len(self.log)))
     if(len(self.log) > 0):
       return True
     else:
       return False
 
-''' The Leader State will initiate communication with all other
+''' 
+    The Leader State will initiate communication with all other
     Follower States on the network. This communication involves
     sending Heartbeat Messages to provide confirmation that there
     is a leader present and sending AppendEntry Messages to append
@@ -175,20 +208,17 @@ class State():
 class LeaderState(State):
   def __init__(self, term, nodeAddrs, logFile, currentLog):
     State.__init__(self, term, logFile, currentLog)
-    print()
-    print(currentLog)
-    print()
     self.totalFollowerIndex = {}
     self.initializeFollowerIndex(nodeAddrs)
     print('New Leader state. Term # {}\n'.format(self.term))
+    self.saveTermNumber()
 
   # Initializes all Follower's commit index and match index
   def initializeFollowerIndex(self, addressLog):
     for address in addressLog:
-      self.totalFollowerIndex[address[0]] = (1,0)
+      self.totalFollowerIndex[address[0]] = (-1,-1)
 
   # Creates the AppendEntries Messages for the server
-  # Heartbeats are AppendEntry Messages without LogEntry Messages
   def createAppendEntries(self, toAddr, toPort, entries=[]):
     message = protoc.AppendEntries()
     message.toAddr = toAddr
@@ -212,8 +242,6 @@ class LeaderState(State):
 
   # Handles incoming Messages from other states on the network
   def handleMessage(self, messageType, message):
-    if self.StateFlag:
-      print('Leader got messageType {} from {}\n'.format(messageType, message.fromAddr))
    
     # Leader should reject any messages from Candidates
     if messageType is protoc.REQUESTVOTE:
@@ -224,43 +252,45 @@ class LeaderState(State):
     # Retrieve a Message from a Follower
     elif messageType is protoc.APPENDREPLY:
       if message.success:
-        if self.StateFlag:
-          print("Got a successful appendentries\n")
         # If the Follower has appended a LogEntry, update that Follower's commit and match index
         if (message.matchIndex > self.totalFollowerIndex[message.fromAddr][1]):
-          index = (self.totalFollowerIndex[message.fromAddr][0] + 1, message.matchIndex)
+          index = (message.matchIndex - 1, message.matchIndex)
           self.totalFollowerIndex[message.fromAddr] = index
       else:
-        if self.StateFlag:
-          print("Got a bad appendentries\n")
-        # Send the Follower missing LogEntries
-        index = (self.totalFollowerIndex[message.fromAddr][0] - 1, message.matchIndex)
-        self.totalFollowerIndex[message.fromAddr] = index
+        # Preform Node Recovery
+        if self.totalFollowerIndex[message.fromAddr][0] > -1:
+          index = (self.totalFollowerIndex[message.fromAddr][0] - 1, message.matchIndex)
+          self.totalFollowerIndex[message.fromAddr] = index
         return self.createAppendEntries(message.fromAddr, message.fromPort, self.createEntriesList(self.totalFollowerIndex[message.fromAddr][0]))
 
       # Test to commit LogEntries
       if self.lastApplied > -1:
         if self.commitEntries():
-          if self.StateFlag:
-            print("committed shit")
+            pass
+            #print("Committed Entries")
         else:
-          if self.StateFlag:
-            print("didnt commit shit")
+            pass
+            #print("Couldn't Commit Entries")
 
     return None, None
 
-  # Create a list of entries beginning with the given index to the current index of the log 
+  # Create a list of entries to send the Follower starting from logIndex
   def createEntriesList(self, logIndex):
     tempList = []
     for i in range(logIndex, (len(self.log)-1)):
-      tempList.append(self.readFromLog(i))
+      # This is a bug in general
+      if i > -1:
+        tempList.append(self.readFromLog(i))
     return tempList
+
 
   # Commit Logic for the LogEntry Messages 
   def commitEntries(self):
  
+    # TO-DO: will always refer to -1 as the lowest, may need to optimize this
     minIndex = self.totalFollowerIndex[list(self.totalFollowerIndex.keys())[0]][1]
-    # standard find minimum loop
+
+    # Find the minimum matchIndex value
     for entry in self.totalFollowerIndex.values():
       if(minIndex > entry[1]):
         minIndex = entry[1]
@@ -269,9 +299,8 @@ class LeaderState(State):
     entryFound = False
     highestIndex = minIndex
     minIndex += 1
-    if self.StateFlag:
-      print("\n{}\n".format(self.totalFollowerIndex))
-    #trying to find HIGHEST index in log that has been replicated on a majority of nodes
+
+    # Find the HIGHEST INDEX in all logs that has been replicated on a majority of nodes
     while minIndex < len(self.log):
       for entry in self.totalFollowerIndex.values():
         if(minIndex == entry[1]):
@@ -281,13 +310,13 @@ class LeaderState(State):
       total = 0
       minIndex += 1
 
-    if self.StateFlag:
-      print("highest index: {}\ncommit index: {}\n".format(highestIndex, self.commitIndex))
+    
+    # If there is a higher value then the commitIndex and that entry is in the current term
     if self.commitIndex < highestIndex and self.log[str(highestIndex)]["creationTerm"] == self.term:
-      print("Went into the last step of commit logic")
-      for i in range(self.commitIndex, highestIndex + 1):
+      for i in range(self.commitIndex + 1, highestIndex + 1):
         self.log[str(i)]["committed"] = True
       self.commitIndex = highestIndex
+      self.writeLogToFile()
       return True
     else:
       return False
@@ -300,9 +329,13 @@ class LeaderState(State):
     message.creationTerm = self.term
     message.logPosition = self.nextIndex
     self.writeToLog(message)
+    self.printLogEntry(self.lastApplied)
     return protoc.LOGENTRY, message
 
-''' The Candidate State handles the voting process to transition
+
+
+''' 
+    The Candidate State handles the voting process to transition
     into a Leader. Once a Candidate has arised, it will create 
     RequestVote Messages to send to all Followers on the network. 
     It should then recieve VoteReply Messages to store the number 
@@ -314,31 +347,27 @@ class CandidateState(State):
   def __init__(self, term, logFile, currentLog=None):
     State.__init__(self, term, logFile, currentLog)
     print('New Candidate state. Term # {}\n'.format(self.term))
-    # Candidate will always vote for himself
     self.votes = 1
     self.heardFromLeader = False
+    self.saveTermNumber()
 
   def handleMessage(self, messageType, message):
-    if self.StateFlag:
-      print('Candidate got messageType {} from {}\n'.format(messageType, message.fromAddr))
+
     # Reply False to other VoteRequest Messages since the Candidate has already voted
     if messageType == protoc.REQUESTVOTE:
       return self.sendVoteNACK(message.fromAddr, message.fromPort)
-    # Stores the VoteResult Messages
+    # Stores granted votes
     elif messageType == protoc.VOTERESULT:
-      if self.StateFlag:
-        print('Message.granted = {}\n'.format(message.granted))
       if message.granted:
+        print('Candidate got messageType {} from {}.'.format(messageType, message.fromAddr))
         self.votes += 1
-        print('applied vote. new vote count is {}\n'.format(self.votes))
+        print('Total votes: {}.\n'.format(self.votes))
       return None,None
     # Reply False to any AppendEntry Messages
     elif messageType == protoc.APPENDENTRIES:
       if message.term < self.term:
         return self.replyAENACK(message.fromAddr, message.fromPort)
       else:
-        # this case is if the term number is = to ours which means we heard
-        # from someone who won the election
         return None, None
 
   # Creates RequestVote Messages
@@ -351,8 +380,9 @@ class CandidateState(State):
 class FollowerState(State):
   def __init__(self, term, logFile, currentLog=None):
     State.__init__(self, term, logFile, currentLog)
-    print('New Follower state. Term # {}'.format(self.term))
+    print('New Follower state. Term # {}\n'.format(self.term))
     self.voted = False
+    self.saveTermNumber()
 
   def handleMessage(self, messageType, message):
     # If RequestVote Message is Recieved
@@ -365,46 +395,44 @@ class FollowerState(State):
     # If AppendEntries Message is Recieved
     elif messageType == protoc.APPENDENTRIES:
       if message.term < self.term:
-        if self.StateFlag:
-          print("message.term < self.term")
         return self.replyAENACK(message.fromAddr, message.fromPort)
-        # at this point we know something should be in our log so do our normal checks
+      # Missing log entries
       if str(message.prevLogIndex) not in self.log.keys():
-        if self.StateFlag:
-          print("str(message.prevLogIndex) = {}, log.keys() = {}".format(message.prevLogIndex, self.log.keys()))
         return self.replyAENACK(message.fromAddr, message.fromPort)
       else:
-        if message.prevLogIndex != -1: #if we're dealing with the first entry, don't do this
+        if message.prevLogIndex != -1: 
+          # If there are entries that don't match the leader's log
           if self.log[str(message.prevLogIndex)]["creationTerm"] != message.prevLogTerm:
-            if self.StateFlag:
-              print("log creation term != message.prevLogTerm")
             return self.replyAENACK(message.fromAddr, message.fromPort)
 
+      # Delete entries if they don't match the leader's log
       if len(message.entries) > 0:
-        if self.StateFlag:
-          print("entries = {}".format(message.entries))
         for entry in message.entries:
-          if str(message.prevLogIndex) not in self.log.keys():
+          if str(entry.logPosition) in self.log.keys():
             if self.log[str(entry.logPosition)]["creationTerm"] != entry.creationTerm:
-              print("\nDeleting Entry\n")
-              deleteFromIndex(entry.logPosition)
+              print("\nDeleting logEntry.\n")
+              self.printLogEntry(entry.logPosition)
+              self.deleteFromIndex(entry.logPosition)
 
+        # Add entries to the Follower's Log
         for entry in message.entries:
-          self.writeToLog(entry)
+          if(entry.logPosition > self.lastApplied):
+            print("\nAdding LogEntry.\n")
+            self.writeToLog(entry)
+            self.printLogEntry(self.lastApplied)
 
+      # Commit entries in Follower's Log
       if message.leaderCommit > self.commitIndex:
         self.commitUpToIndex(message.leaderCommit)
+        self.writeLogToFile()
 
       return self.replyAEACK(message.fromAddr, message.fromPort)
 
+  # Commit entries from index
   def commitUpToIndex(self, index):
-    if self.StateFlag:
-      print("In commitUpToIndex")
     for i in range(self.commitIndex, index + 1):
-      if self.StateFlag:
-        print("committing log index {}".format(i))
       self.log[str(i)]["committed"] = True
 
+  # Delete Log Entry of index
   def deleteFromIndex(self, index):
-    for i in range(index, self.lastApplied + 1):
-      self.removeEntry(i)
+    self.removeEntry(index)

@@ -8,13 +8,15 @@ import State
 import random
 import math
 import queue
+import os
 
 class Server:
     def __init__(self):
         self.NodeAddrs = []
         self.Socket = None
         self.logFileName = None
-        self.ServerFlag = True
+        self.ServerFlag = False
+        self.TimerFlag = True
 
         # figure out who we need to listen for
         nodeaddrsfile = open('nodeaddrs.txt', 'r')
@@ -27,7 +29,7 @@ class Server:
             if hostaddr == self.getownip():
                 self.addr = (hostaddr, socketnum)
                 self.logFileName = line.split(',')[2].strip()
-                print("My address is {} and my logfile is {}".format(self.addr, self.logFileName))
+                print("My address is {} and my logfile is {}\n".format(self.addr, self.logFileName))
             else:
                 self.NodeAddrs.append((hostaddr, socketnum))
 
@@ -47,6 +49,7 @@ class Server:
 
         # init election timer and transition to CandidateState if it runs out
         self.electionTimeout = random.uniform(8, 10)
+        print("Election Timeout Value: {}\n".format(self.electionTimeout))
         self.timer = threading.Timer(self.electionTimeout, self.transition, ('Candidate',))
         self.timer.start()
         self.heartbeatTimeout = 5
@@ -65,6 +68,8 @@ class Server:
     def resetTimer(self):
         self.timer.cancel()
         self.selectElectionTimeoutValue()
+        if self.TimerFlag:
+            print("Election Timeout Value: {}\n".format(self.electionTimeout))
         self.timer = threading.Timer(self.electionTimeout, self.transition, ['Candidate',])
         self.timer.start()
 
@@ -129,6 +134,7 @@ class Server:
             outgoingMessage = protoc.WrapperMessage()
             outgoingMessage.type = messageTuple[0]
 
+            #print(str(messageTuple))
             if messageTuple[0] == protoc.REQUESTVOTE:
                 outgoingMessage.rvm.CopyFrom(messageTuple[1])
             elif messageTuple[0] == protoc.VOTERESULT:
@@ -137,7 +143,7 @@ class Server:
                 outgoingMessage.aem.CopyFrom(messageTuple[1])
             elif messageTuple[0] == protoc.APPENDREPLY:
                 outgoingMessage.arm.CopyFrom(messageTuple[1])
-
+          
             self.Socket.sendto(outgoingMessage.SerializeToString(), (messageTuple[1].toAddr, messageTuple[1].toPort))
 
     def messageHandler(self, messageData):
@@ -203,7 +209,6 @@ class Server:
                 replyMessage.toAddr = innerMessage.fromAddr
                 replyMessage.toPort = innerMessage.fromPort
                 self.outgoingMessageQ.put_nowait((replyMessageType, replyMessage))
-                #self.sendMessage(replyMessageType, replyMessage)
 
     def clientListenerThread(self):
         while True:
@@ -211,16 +216,21 @@ class Server:
             print()
             if clientCommand.strip() == 'printlog':
                 self.StateInfo.printLog()
+            elif clientCommand.strip() == 'quit':
+                os._exit(1)
             elif clientCommand.strip() == '-s':
                 if self.ServerFlag:
                     self.ServerFlag = False
                 else:
                     self.ServerFlag = True
-            elif clientCommand.strip() == '-l':
-                if self.StateInfo.StateFlag:
-                   self.StateInfo.StateFlag = False
+            elif clientCommand.strip() == '-timer':
+                if self.TimerFlag:
+                    self.TimerFlag = False
                 else:
-                   self.StateInfo.StateFlag = True
+                    self.TimerFlag = True
+            elif clientCommand.strip() == '-clear':
+                for i in range(0,40):
+                    print()
             elif self.isLeader():
                 messageType,logEntryMessage = self.StateInfo.createLogEntry(clientCommand.strip())
                 for server in self.NodeAddrs:
