@@ -170,9 +170,6 @@ class Server:
 
         # for all servers in all states the first thing we need to check is
         # that our term number is not out of date
-        #if self.commitIndex > self.lastApplied:
-        #    self.StateInfo.lastApplied += 1
-        #    applyLogEntryToStateMachine(self.StateInfo.lastApplied)
         if innerMessage.term > self.StateInfo.term:
             if self.ServerFlag:
               print('Got a higher term number\n\n')
@@ -204,8 +201,6 @@ class Server:
         elif self.isLeader():
             # until we implement logs we don't need to do anything here
             if replyMessageType is not None:
-                # Where are we adding the sending IP and port
-                # This is the problem!!!!!!
                 replyMessage.toAddr = innerMessage.fromAddr
                 replyMessage.toPort = innerMessage.fromPort
                 self.outgoingMessageQ.put_nowait((replyMessageType, replyMessage))
