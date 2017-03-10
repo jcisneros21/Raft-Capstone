@@ -41,7 +41,7 @@ python3 test.py
 ## TO-DO
 
 * Fixing current bugs in the system  
-  - There seems to be a bug when saving term numbers for each node. Fixing this bug is top priority.
+- There seems to be a bug when saving term numbers for each node. Fixing this bug is top priority.
 
 * Testing and Redesigning
 
