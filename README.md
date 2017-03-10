@@ -15,9 +15,9 @@ Our final product for this two-semester long capstone project is five of our Raf
 
 If you would like more information about how we combined mininet and GRE tunnels check out the excellent tutorials on Tech and Trains by Gregory Gee that we based our work off of below:
 
-Part 1: https://techandtrains.com/2013/09/11/connecting-two-mininet-networks-with-gre-tunnel/
-Part 2: https://techandtrains.com/2014/01/20/connecting-two-mininet-networks-with-gre-tunnel-part-2/
-Part 3: https://techandtrains.com/2014/01/25/using-linux-gre-tunnels-to-connect-two-mininet-networks/
+Part 1: https://techandtrains.com/2013/09/11/connecting-two-mininet-networks-with-gre-tunnel/  
+Part 2: https://techandtrains.com/2014/01/20/connecting-two-mininet-networks-with-gre-tunnel-part-2/  
+Part 3: https://techandtrains.com/2014/01/25/using-linux-gre-tunnels-to-connect-two-mininet-networks/  
 
 ## Getting Started
   
