@@ -1,5 +1,5 @@
 # Raft-Capstone
-This is the alpha version of our CSCI 4962 capstone project.  We are seniors at Saint Louis University developing our own version of the Raft consensus protocol. Below is an explanation of what our project is and how it works.
+This is the alpha version of our CSCI 4962 capstone project.  We are seniors at Saint Louis University working with Dr. Flavio Esposito on developing our own version of the Raft consensus protocol. Below is an explanation of what our project is and how it works.
 
 Raft is an asynchronous, fault-tolerant, distributed consensus algorithm created by Diego Ongaro and John Ousterhout of Stanford University.  Raft was intended to be an alternative to Leslie Lamport's Paxos algorithm.  It is designed to be simpler, more understandable, and easier to implement than Paxos.  To learn more about the details of Raft and to better understand our implementation please refer to Ongaro and Ousterhout's paper "In Search of an Understandable Consensus Algorithm" (https://raft.github.io/raft.pdf).
 
