@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='RaftMessages.proto',
   package='Raft',
   syntax='proto3',
-  serialized_pb=_b('\n\x12RaftMessages.proto\x12\x04Raft\"\x8a\x01\n\x0bRequestVote\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x14\n\x0clastLogIndex\x18\x06 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x07 \x01(\x05\"o\n\nVoteResult\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07granted\x18\x06 \x01(\x08\"\xc3\x01\n\rAppendEntries\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x14\n\x0cprevLogIndex\x18\x06 \x01(\x05\x12\x13\n\x0bprevLogTerm\x18\x07 \x01(\x05\x12\x1f\n\x07\x65ntries\x18\x08 \x03(\x0b\x32\x0e.Raft.LogEntry\x12\x14\n\x0cleaderCommit\x18\t \x01(\x05\"\x84\x01\n\x0b\x41ppendReply\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07success\x18\x06 \x01(\x08\x12\x12\n\nmatchIndex\x18\x07 \x01(\x05\"\xb2\x01\n\x0eWrapperMessage\x12\x1f\n\x04type\x18\x01 \x01(\x0e\x32\x11.Raft.MessageType\x12\x1e\n\x03rvm\x18\x02 \x01(\x0b\x32\x11.Raft.RequestVote\x12\x1d\n\x03vrm\x18\x03 \x01(\x0b\x32\x10.Raft.VoteResult\x12 \n\x03\x61\x65m\x18\x04 \x01(\x0b\x32\x13.Raft.AppendEntries\x12\x1e\n\x03\x61rm\x18\x05 \x01(\x0b\x32\x11.Raft.AppendReply\"V\n\x08LogEntry\x12\x11\n\tcommitted\x18\x01 \x01(\x08\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\t\x12\x14\n\x0c\x63reationTerm\x18\x03 \x01(\x05\x12\x13\n\x0blogPosition\x18\x04 \x01(\x05*`\n\x0bMessageType\x12\x0f\n\x0bREQUESTVOTE\x10\x00\x12\x0e\n\nVOTERESULT\x10\x01\x12\x11\n\rAPPENDENTRIES\x10\x03\x12\x0f\n\x0b\x41PPENDREPLY\x10\x04\x12\x0c\n\x08LOGENTRY\x10\x05\x62\x06proto3')
+  serialized_pb=_b('\n\x12RaftMessages.proto\x12\x04Raft\"\x8a\x01\n\x0bRequestVote\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x14\n\x0clastLogIndex\x18\x06 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x07 \x01(\x05\"o\n\nVoteResult\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07granted\x18\x06 \x01(\x08\"\xc3\x01\n\rAppendEntries\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x14\n\x0cprevLogIndex\x18\x06 \x01(\x05\x12\x13\n\x0bprevLogTerm\x18\x07 \x01(\x05\x12\x1f\n\x07\x65ntries\x18\x08 \x03(\x0b\x32\x0e.Raft.LogEntry\x12\x14\n\x0cleaderCommit\x18\t \x01(\x05\"\x99\x01\n\x0b\x41ppendReply\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0c\n\x04term\x18\x05 \x01(\x05\x12\x0f\n\x07success\x18\x06 \x01(\x08\x12\x12\n\nmatchIndex\x18\x07 \x01(\x05\x12\x13\n\x0b\x63ommitIndex\x18\x08 \x01(\x05\"\xaf\x02\n\x0eWrapperMessage\x12\x1f\n\x04type\x18\x01 \x01(\x0e\x32\x11.Raft.MessageType\x12\x1e\n\x03rvm\x18\x02 \x01(\x0b\x32\x11.Raft.RequestVote\x12\x1d\n\x03vrm\x18\x03 \x01(\x0b\x32\x10.Raft.VoteResult\x12 \n\x03\x61\x65m\x18\x04 \x01(\x0b\x32\x13.Raft.AppendEntries\x12\x1e\n\x03\x61rm\x18\x05 \x01(\x0b\x32\x11.Raft.AppendReply\x12\x1c\n\x02js\x18\x06 \x01(\x0b\x32\x10.Raft.JoinSystem\x12\x1b\n\x02jr\x18\x07 \x01(\x0b\x32\x0f.Raft.JoinReply\x12\x1c\n\x02\x61p\x18\x08 \x01(\x0b\x32\x10.Raft.AppendHost\x12\"\n\x03\x61pr\x18\t \x01(\x0b\x32\x15.Raft.AppendHostReply\"V\n\x08LogEntry\x12\x11\n\tcommitted\x18\x01 \x01(\x08\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\t\x12\x14\n\x0c\x63reationTerm\x18\x03 \x01(\x05\x12\x13\n\x0blogPosition\x18\x04 \x01(\x05\"P\n\nJoinSystem\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\"\x8c\x01\n\tJoinReply\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0f\n\x07success\x18\x05 \x01(\x08\x12\x14\n\x0c\x61ssignedAddr\x18\x06 \x01(\t\x12\x14\n\x0c\x61ssignedPort\x18\x07 \x01(\x05\"t\n\nAppendHost\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x10\n\x08hostAddr\x18\x05 \x01(\t\x12\x10\n\x08hostPort\x18\x06 \x01(\x05\"f\n\x0f\x41ppendHostReply\x12\x10\n\x08\x66romAddr\x18\x01 \x01(\t\x12\x10\n\x08\x66romPort\x18\x02 \x01(\x05\x12\x0e\n\x06toAddr\x18\x03 \x01(\t\x12\x0e\n\x06toPort\x18\x04 \x01(\x05\x12\x0f\n\x07success\x18\x05 \x01(\x08*\xa4\x01\n\x0bMessageType\x12\x0f\n\x0bREQUESTVOTE\x10\x00\x12\x0e\n\nVOTERESULT\x10\x01\x12\x11\n\rAPPENDENTRIES\x10\x03\x12\x0f\n\x0b\x41PPENDREPLY\x10\x04\x12\x0c\n\x08LOGENTRY\x10\x05\x12\x0e\n\nJOINSYSTEM\x10\x06\x12\r\n\tJOINREPLY\x10\x07\x12\x0e\n\nAPPENDHOST\x10\x08\x12\x13\n\x0f\x41PPENDHOSTREPLY\x10\tb\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -50,11 +50,27 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
       name='LOGENTRY', index=4, number=5,
       options=None,
       type=None),
+    _descriptor.EnumValueDescriptor(
+      name='JOINSYSTEM', index=5, number=6,
+      options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='JOINREPLY', index=6, number=7,
+      options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='APPENDHOST', index=7, number=8,
+      options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='APPENDHOSTREPLY', index=8, number=9,
+      options=None,
+      type=None),
   ],
   containing_type=None,
   options=None,
-  serialized_start=884,
-  serialized_end=980,
+  serialized_start=1478,
+  serialized_end=1642,
 )
 _sym_db.RegisterEnumDescriptor(_MESSAGETYPE)
 
@@ -64,6 +80,10 @@ VOTERESULT = 1
 APPENDENTRIES = 3
 APPENDREPLY = 4
 LOGENTRY = 5
+JOINSYSTEM = 6
+JOINREPLY = 7
+APPENDHOST = 8
+APPENDHOSTREPLY = 9
 
 
 
@@ -349,6 +369,13 @@ _APPENDREPLY = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='commitIndex', full_name='Raft.AppendReply.commitIndex', index=7,
+      number=8, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -362,7 +389,7 @@ _APPENDREPLY = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=481,
-  serialized_end=613,
+  serialized_end=634,
 )
 
 
@@ -408,6 +435,34 @@ _WRAPPERMESSAGE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='js', full_name='Raft.WrapperMessage.js', index=5,
+      number=6, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='jr', full_name='Raft.WrapperMessage.jr', index=6,
+      number=7, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='ap', full_name='Raft.WrapperMessage.ap', index=7,
+      number=8, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='apr', full_name='Raft.WrapperMessage.apr', index=8,
+      number=9, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -420,8 +475,8 @@ _WRAPPERMESSAGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=616,
-  serialized_end=794,
+  serialized_start=637,
+  serialized_end=940,
 )
 
 
@@ -472,8 +527,258 @@ _LOGENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=796,
-  serialized_end=882,
+  serialized_start=942,
+  serialized_end=1028,
+)
+
+
+_JOINSYSTEM = _descriptor.Descriptor(
+  name='JoinSystem',
+  full_name='Raft.JoinSystem',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='fromAddr', full_name='Raft.JoinSystem.fromAddr', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='fromPort', full_name='Raft.JoinSystem.fromPort', index=1,
+      number=2, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='toAddr', full_name='Raft.JoinSystem.toAddr', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='toPort', full_name='Raft.JoinSystem.toPort', index=3,
+      number=4, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1030,
+  serialized_end=1110,
+)
+
+
+_JOINREPLY = _descriptor.Descriptor(
+  name='JoinReply',
+  full_name='Raft.JoinReply',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='fromAddr', full_name='Raft.JoinReply.fromAddr', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='fromPort', full_name='Raft.JoinReply.fromPort', index=1,
+      number=2, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='toAddr', full_name='Raft.JoinReply.toAddr', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='toPort', full_name='Raft.JoinReply.toPort', index=3,
+      number=4, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='success', full_name='Raft.JoinReply.success', index=4,
+      number=5, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='assignedAddr', full_name='Raft.JoinReply.assignedAddr', index=5,
+      number=6, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='assignedPort', full_name='Raft.JoinReply.assignedPort', index=6,
+      number=7, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1113,
+  serialized_end=1253,
+)
+
+
+_APPENDHOST = _descriptor.Descriptor(
+  name='AppendHost',
+  full_name='Raft.AppendHost',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='fromAddr', full_name='Raft.AppendHost.fromAddr', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='fromPort', full_name='Raft.AppendHost.fromPort', index=1,
+      number=2, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='toAddr', full_name='Raft.AppendHost.toAddr', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='toPort', full_name='Raft.AppendHost.toPort', index=3,
+      number=4, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='hostAddr', full_name='Raft.AppendHost.hostAddr', index=4,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='hostPort', full_name='Raft.AppendHost.hostPort', index=5,
+      number=6, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1255,
+  serialized_end=1371,
+)
+
+
+_APPENDHOSTREPLY = _descriptor.Descriptor(
+  name='AppendHostReply',
+  full_name='Raft.AppendHostReply',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='fromAddr', full_name='Raft.AppendHostReply.fromAddr', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='fromPort', full_name='Raft.AppendHostReply.fromPort', index=1,
+      number=2, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='toAddr', full_name='Raft.AppendHostReply.toAddr', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='toPort', full_name='Raft.AppendHostReply.toPort', index=3,
+      number=4, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='success', full_name='Raft.AppendHostReply.success', index=4,
+      number=5, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1373,
+  serialized_end=1475,
 )
 
 _APPENDENTRIES.fields_by_name['entries'].message_type = _LOGENTRY
@@ -482,12 +787,20 @@ _WRAPPERMESSAGE.fields_by_name['rvm'].message_type = _REQUESTVOTE
 _WRAPPERMESSAGE.fields_by_name['vrm'].message_type = _VOTERESULT
 _WRAPPERMESSAGE.fields_by_name['aem'].message_type = _APPENDENTRIES
 _WRAPPERMESSAGE.fields_by_name['arm'].message_type = _APPENDREPLY
+_WRAPPERMESSAGE.fields_by_name['js'].message_type = _JOINSYSTEM
+_WRAPPERMESSAGE.fields_by_name['jr'].message_type = _JOINREPLY
+_WRAPPERMESSAGE.fields_by_name['ap'].message_type = _APPENDHOST
+_WRAPPERMESSAGE.fields_by_name['apr'].message_type = _APPENDHOSTREPLY
 DESCRIPTOR.message_types_by_name['RequestVote'] = _REQUESTVOTE
 DESCRIPTOR.message_types_by_name['VoteResult'] = _VOTERESULT
 DESCRIPTOR.message_types_by_name['AppendEntries'] = _APPENDENTRIES
 DESCRIPTOR.message_types_by_name['AppendReply'] = _APPENDREPLY
 DESCRIPTOR.message_types_by_name['WrapperMessage'] = _WRAPPERMESSAGE
 DESCRIPTOR.message_types_by_name['LogEntry'] = _LOGENTRY
+DESCRIPTOR.message_types_by_name['JoinSystem'] = _JOINSYSTEM
+DESCRIPTOR.message_types_by_name['JoinReply'] = _JOINREPLY
+DESCRIPTOR.message_types_by_name['AppendHost'] = _APPENDHOST
+DESCRIPTOR.message_types_by_name['AppendHostReply'] = _APPENDHOSTREPLY
 DESCRIPTOR.enum_types_by_name['MessageType'] = _MESSAGETYPE
 
 RequestVote = _reflection.GeneratedProtocolMessageType('RequestVote', (_message.Message,), dict(
@@ -531,6 +844,34 @@ LogEntry = _reflection.GeneratedProtocolMessageType('LogEntry', (_message.Messag
   # @@protoc_insertion_point(class_scope:Raft.LogEntry)
   ))
 _sym_db.RegisterMessage(LogEntry)
+
+JoinSystem = _reflection.GeneratedProtocolMessageType('JoinSystem', (_message.Message,), dict(
+  DESCRIPTOR = _JOINSYSTEM,
+  __module__ = 'RaftMessages_pb2'
+  # @@protoc_insertion_point(class_scope:Raft.JoinSystem)
+  ))
+_sym_db.RegisterMessage(JoinSystem)
+
+JoinReply = _reflection.GeneratedProtocolMessageType('JoinReply', (_message.Message,), dict(
+  DESCRIPTOR = _JOINREPLY,
+  __module__ = 'RaftMessages_pb2'
+  # @@protoc_insertion_point(class_scope:Raft.JoinReply)
+  ))
+_sym_db.RegisterMessage(JoinReply)
+
+AppendHost = _reflection.GeneratedProtocolMessageType('AppendHost', (_message.Message,), dict(
+  DESCRIPTOR = _APPENDHOST,
+  __module__ = 'RaftMessages_pb2'
+  # @@protoc_insertion_point(class_scope:Raft.AppendHost)
+  ))
+_sym_db.RegisterMessage(AppendHost)
+
+AppendHostReply = _reflection.GeneratedProtocolMessageType('AppendHostReply', (_message.Message,), dict(
+  DESCRIPTOR = _APPENDHOSTREPLY,
+  __module__ = 'RaftMessages_pb2'
+  # @@protoc_insertion_point(class_scope:Raft.AppendHostReply)
+  ))
+_sym_db.RegisterMessage(AppendHostReply)
 
 
 # @@protoc_insertion_point(module_scope)

@@ -180,6 +180,9 @@ class State():
 
   # Extracts a Saved Log from logFile 
   def readLogFromFile(self):
+    if self.logFile is None:
+      return False
+
     if not os.path.isfile(self.logFile):
       f = open(self.logFile, 'w+')
       f.close()
@@ -209,6 +212,7 @@ class LeaderState(State):
   def __init__(self, term, nodeAddrs, logFile, currentLog):
     State.__init__(self, term, logFile, currentLog)
     self.totalFollowerIndex = {}
+    self.appended = 0
     self.initializeFollowerIndex(nodeAddrs)
     print('New Leader state. Term # {}\n'.format(self.term))
     self.saveTermNumber()
@@ -271,6 +275,10 @@ class LeaderState(State):
         else:
             pass
             #print("Couldn't Commit Entries")
+    elif messageType is protoc.JOINSYSTEM:
+      return self.createAppendHost(message.fromAddr)
+    elif messageType is protoc.APPENDHOSTREPLY:
+      self.appended += 1
 
     return None, None
 
@@ -332,6 +340,10 @@ class LeaderState(State):
     self.printLogEntry(self.lastApplied)
     return protoc.LOGENTRY, message
 
+  def createAppendHost(self, hostAddress):
+    message = protoc.AppendHost()
+    message.hostAddr = hostAddress
+    return protoc.APPENDHOST, message
 
 
 ''' 
@@ -427,6 +439,11 @@ class FollowerState(State):
         self.writeLogToFile()
 
       return self.replyAEACK(message.fromAddr, message.fromPort)
+    elif messageType == protoc.APPENDHOST:
+      return self.createAppendHostReply()
+    # TO-DO: Logic for this
+    elif messageType == protoc.JOINREPLY:
+      return True
 
   # Commit entries from index
   def commitUpToIndex(self, index):
@@ -436,3 +453,7 @@ class FollowerState(State):
   # Delete Log Entry of index
   def deleteFromIndex(self, index):
     self.removeEntry(index)
+
+  def createAppendHostReply(self):
+    message = protoc.AppendHostReply()
+    return protoc.APPENDHOSTREPLY, message

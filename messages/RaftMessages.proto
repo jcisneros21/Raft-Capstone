@@ -8,6 +8,10 @@ enum MessageType {
   APPENDENTRIES = 3;
   APPENDREPLY = 4;
   LOGENTRY = 5;
+  JOINSYSTEM = 6;
+  JOINREPLY = 7;
+  APPENDHOST = 8;
+  APPENDHOSTREPLY = 9;
 }
 
 message RequestVote {
@@ -58,6 +62,10 @@ message WrapperMessage {
   VoteResult vrm = 3;
   AppendEntries aem = 4;
   AppendReply arm = 5;
+  JoinSystem js = 6;
+  JoinReply jr = 7;
+  AppendHost ap = 8;
+  AppendHostReply apr = 9;
 };
 
 message LogEntry {
@@ -66,3 +74,43 @@ message LogEntry {
   int32 creationTerm = 3;
   int32 logPosition = 4;  // this is the same as the key for this entry in the dict
 }
+
+// Node will send this message to join a system.
+message JoinSystem {
+  string fromAddr = 1;
+  int32 fromPort = 2;
+  string toAddr = 3;
+  int32 toPort = 4;
+};
+
+// Leader will contact the node to say it has been successful
+// in adding that node to the system.
+message JoinReply {
+  string fromAddr = 1;
+  int32 fromPort = 2;
+  string toAddr = 3;
+  int32 toPort = 4;
+  bool success = 5;
+  string assignedAddr = 6;
+  int32 assignedPort = 7;
+}
+
+// Append Host Message 
+message AppendHost {
+  string fromAddr = 1;
+  int32 fromPort = 2;
+  string toAddr = 3;
+  int32 toPort = 4;
+  string hostAddr = 5;
+  int32 hostPort = 6;
+}
+
+// Acknowledgement that the host was added to the host list.
+message AppendHostReply {
+  string fromAddr = 1;
+  int32 fromPort = 2;
+  string toAddr = 3;
+  int32 toPort = 4;
+  bool success = 5;
+}
+
