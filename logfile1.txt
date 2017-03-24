@@ -1,0 +1,32 @@
+{
+  "-1": {
+    "committed": true,
+    "creationTerm": 0,
+    "data": "",
+    "logPosition": -1
+  },
+  "0": {
+    "committed": true,
+    "creationTerm": 1,
+    "data": "Adding",
+    "logPosition": 0
+  },
+  "1": {
+    "committed": true,
+    "creationTerm": 1,
+    "data": "NEw",
+    "logPosition": 1
+  },
+  "2": {
+    "committed": true,
+    "creationTerm": 5,
+    "data": "MMMMMMM",
+    "logPosition": 2
+  },
+  "3": {
+    "committed": true,
+    "creationTerm": 7,
+    "data": "Add",
+    "logPosition": 3
+  }
+}

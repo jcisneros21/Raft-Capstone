@@ -171,8 +171,7 @@ class Server:
         # for all servers in all states the first thing we need to check is
         # that our term number is not out of date
         if innerMessage.term > self.StateInfo.term:
-            if self.ServerFlag:
-              print('Got a higher term number\n\n')
+            print('Got a higher term number\n\n')
             self.StateInfo.term = innerMessage.term
             self.transition('Follower')
 
@@ -185,7 +184,9 @@ class Server:
             # leaders
             if replyMessageType == protoc.APPENDREPLY and replyMessage.success:
                 self.resetTimer()
-            self.outgoingMessageQ.put_nowait((replyMessageType, replyMessage))
+            
+            if replyMessageType is not None:
+                self.outgoingMessageQ.put_nowait((replyMessageType, replyMessage))
         elif self.isCandidate():
             # if we have something to send then just need to send it
             if replyMessageType is not None:
@@ -229,5 +230,7 @@ class Server:
             elif self.isLeader():
                 messageType,logEntryMessage = self.StateInfo.createLogEntry(clientCommand.strip())
                 for server in self.NodeAddrs:
+                    print("This is the addr: " + server[0])
+                    print("This is the port: " + str(server[1]))
                     messageType,outgoingMessage = self.StateInfo.createAppendEntries(server[0], server[1], [logEntryMessage,])
                     self.outgoingMessageQ.put_nowait((messageType, outgoingMessage))

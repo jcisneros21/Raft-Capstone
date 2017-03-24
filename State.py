@@ -242,6 +242,8 @@ class LeaderState(State):
 
   # Handles incoming Messages from other states on the network
   def handleMessage(self, messageType, message):
+    # TO-DO: If we have (-1, -1) for a follower, we can take the incoming message
+    #        from that follower and extract the current information fro that single time
    
     # Leader should reject any messages from Candidates
     if messageType is protoc.REQUESTVOTE:
@@ -254,12 +256,13 @@ class LeaderState(State):
       if message.success:
         # If the Follower has appended a LogEntry, update that Follower's commit and match index
         if (message.matchIndex > self.totalFollowerIndex[message.fromAddr][1]):
-          index = (message.matchIndex - 1, message.matchIndex)
+          # index = (message.matchIndex - 1, message.matchIndex)
+          index = (message.matchIndex + 1, message.matchIndex)
           self.totalFollowerIndex[message.fromAddr] = index
       else:
         # Preform Node Recovery
         if self.totalFollowerIndex[message.fromAddr][0] > -1:
-          index = (self.totalFollowerIndex[message.fromAddr][0] - 1, message.matchIndex)
+          index = (self.totalFollowerIndex[message.fromAddr][0] - 1, self.totalFollowerIndex[message.fromAddr][0] - 1)
           self.totalFollowerIndex[message.fromAddr] = index
         return self.createAppendEntries(message.fromAddr, message.fromPort, self.createEntriesList(self.totalFollowerIndex[message.fromAddr][0]))
 
@@ -374,6 +377,8 @@ class CandidateState(State):
   def requestVote(self):
     message = protoc.RequestVote()
     message.term = self.term
+    message.lastLogIndex = self.lastApplied
+    message.lastLogTerm = self.log[str(message.lastLogIndex)]["creationTerm"]
     return protoc.REQUESTVOTE, message
 
 
@@ -390,8 +395,11 @@ class FollowerState(State):
       if self.voted:
         return self.sendVoteNACK(message.fromAddr, message.fromPort)
       else:
-        self.voted = True
-        return self.sendVoteACK(message.fromAddr, message.fromPort)
+        if message.lastLogIndex >= self.lastApplied and message.lastLogTerm >= self.log[str(self.lastApplied)]["creationTerm"]:
+          self.voted = True
+          return self.sendVoteACK(message.fromAddr, message.fromPort)
+        else:
+          return self.sendVoteNACK(message.fromAddr, message.fromPort)
     # If AppendEntries Message is Recieved
     elif messageType == protoc.APPENDENTRIES:
       if message.term < self.term:
