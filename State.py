@@ -15,9 +15,10 @@ class State():
     self.log = {}
     readFile = self.readLogFromFile()
     
-    higherTerm = self.readTermNumber()
-    if higherTerm > self.term:
-      self.term = higherTerm
+    if readFile is True:
+      higherTerm = self.readTermNumber()
+      if higherTerm > self.term:
+        self.term = higherTerm
 
     # If no log has been passed or been read, create a new log
     if not readFile and currentLog is None:
@@ -92,38 +93,14 @@ class State():
     voteack.granted = True
     return protoc.VOTERESULT, voteack
 
-  # Retrieve file for saving Term Number
-  def getTermFile(self, logfile):
-    filename = ''
-    if('1' in logfile):
-      filename = 'state1.txt'
-    elif('2' in logfile):
-      filename = 'state2.txt'
-    elif('3' in logfile):
-      filename = 'state3.txt'
-    elif('4' in logfile):
-      filename = 'state4.txt'
-    elif('5' in logfile):
-      filename = 'state5.txt'
-    return filename
-
   # Save Term Number to file
   def saveTermNumber(self):
-    filename = self.getTermFile(self.logFile)
-    with open(filename, 'w+') as fp:
-      fp.write(str(self.term))
+    self.log[str(-1)]["creationTerm"] = self.term
+    self.writeLogToFile()
 
   # Retrieve Term Number from file
   def readTermNumber(self):
-    termNumber = 0
-    filename = self.getTermFile(self.logFile)
-    try:
-      with open(filename, 'r') as fp:
-        for line in fp:
-          termNumber = int(line.split()[0])
-      return termNumber
-    except FileNotFoundError as e:
-      return 0
+    return self.log[str(-1)]["creationTerm"]
 
   # Stores a Dictionary of a LogEntry Message into a Log
   def writeToLog(self, message):
@@ -242,8 +219,6 @@ class LeaderState(State):
 
   # Handles incoming Messages from other states on the network
   def handleMessage(self, messageType, message):
-    # TO-DO: If we have (-1, -1) for a follower, we can take the incoming message
-    #        from that follower and extract the current information fro that single time
    
     # Leader should reject any messages from Candidates
     if messageType is protoc.REQUESTVOTE:
@@ -262,7 +237,8 @@ class LeaderState(State):
       else:
         # Preform Node Recovery
         if self.totalFollowerIndex[message.fromAddr][0] > -1:
-          index = (self.totalFollowerIndex[message.fromAddr][0] - 1, self.totalFollowerIndex[message.fromAddr][0] - 1)
+          #index = (self.totalFollowerIndex[message.fromAddr][0] - 1, message.matchIndex)
+          index = (message.matchIndex, message.matchIndex - 1)
           self.totalFollowerIndex[message.fromAddr] = index
         return self.createAppendEntries(message.fromAddr, message.fromPort, self.createEntriesList(self.totalFollowerIndex[message.fromAddr][0]))
 
