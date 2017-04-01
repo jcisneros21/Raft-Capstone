@@ -38,6 +38,7 @@ class Server:
         # If IP address is not found in file, create a temp port number
         if self.addr is None:
             self.addr = (self.getownip(), 8999)
+            print(self.addr)
 
         nodeaddrsfile.close()
 
@@ -61,8 +62,6 @@ class Server:
         # If we have an IP address and Port Number, start the timer.
         if self.addr[1] is not 8999:
             self.timer.start()
-        else:
-            self.sendJoinMessage()
             
         self.heartbeatTimeout = 5
         self.listen()
@@ -82,22 +81,61 @@ class Server:
 
     # Add new host to host list
     def addHostToNodeAddrs(self, address, port):
+        print(address)
+        print(port)
         self.NodeAddrs.append((address, port))
+    
+    def addHostInfo(self, address, port): 
+        self.addr = (address, port)
+        self.logFileName = "logfile6.txt"
+        print(self.logFileName)
+        self.timer.start()
+        self.listen()
    
+    # Get new Port for Host
     def getNewPort(self):
         return (len(self.NodeAddrs) + 9000 + 1)
 
+    def extractNetworkInfo(self, data):
+        addr = ""
+        port = 0
+        i = 0
+        for string in data.split():
+            i += 1
+            if i == 3:
+                addr = string.strip(',')
+            if i == 4:
+                port = int(string)
+        return addr, port
+
+    def sendJoinReplyMessage(self, address, port):
+        messageType, message = self.StateInfo.createJoinReply()
+        message.fromAddr = self.addr[0]
+        message.fromPort = self.addr[1]
+        message.toAddr = address
+        message.toPort = 8999
+        message.success = True
+        message.assignedAddr = address
+        message.assignedPort = port
+        self.outgoingMessageQ.put_nowait((messageType, message))
+
+    # def extractNetworkFromFile(self):
+        
+
     # Send AppendHost Messages to all Followers
-    def sendAppendHostMessages(self, appendHostMessage, messageType, port):
-        for server in self.NodeAddrs:
-            appendHostMessage.toAddr = server[0]
-            appendHostMessage.toPort = server[1]
-            appendHostMessage.hostPort = port
-            self.outgoingMessageQ.put_nowait((messageType, appendHostMessage))  
+    # def sendAppendHostMessages(self, appendHostMessage, messageType, port):
+        #for server in self.NodeAddrs:
+            #appendHostMessage.toAddr = server[0]
+            #appendHostMessage.toPort = server[1]
+            #appendHostMessage.hostPort = port
+            #self.outgoingMessageQ.put_nowait((messageType, appendHostMessage))  
 
     def listen(self):
         self.Socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.Socket.bind(self.addr)
+        if self.addr[1] == 8999:
+            print("HEEEEEEEEEELLLO")
+            self.sendJoinMessage()
         while True:
             data = self.Socket.recv(1024)
             threading.Thread(target=self.messageHandler, args=(data,)).start()
@@ -186,11 +224,13 @@ class Server:
                 outgoingMessage.js.CopyFrom(messageTuple[1])
             elif messageTuple[0] == protoc.JOINREPLY:
                 outgoingMessage.jr.CopyFrom(messageTuple[1])
-            elif messageTuple[0] == protoc.APPENDHOST:
-                outgoingMessage.ah.CopyFrom(messageTuple[1])
-            elif messageTuple[0] == protoc.APPENDHOSTREPLY:
-                outgoingMessage.ahr.CopyFrom(messageTuple[1])
-          
+            #elif messageTuple[0] == protoc.APPENDHOST:
+                #outgoingMessage.ah.CopyFrom(messageTuple[1])
+            #elif messageTuple[0] == protoc.APPENDHOSTREPLY:
+                #outgoingMessage.ahr.CopyFrom(messageTuple[1])
+            
+            if self.addr[1] is 8999:
+                print("HEEELLLLLLLLLLOOOOOOOO")
             self.Socket.sendto(outgoingMessage.SerializeToString(), (messageTuple[1].toAddr, messageTuple[1].toPort))
 
     def messageHandler(self, messageData):
@@ -223,14 +263,21 @@ class Server:
             innerMessage = protoc.JoinReply()
             innerMessage = outerMessage.jr
             messageType = protoc.JOINREPLY
-        elif outerMessage.type == protoc.APPENDHOST:
-            innerMessage = protoc.AppendHost()
-            innerMessage = outerMessage.ah
-            messageType = protoc.APPENDHOST
-        elif outerMessage.type == protoc.APPENDHOSTREPLY:
-            innerMessage = protoc.AppendHostReply()
-            innerMessage = outerMessage.ahr
-            messageType = protoc.APPENDHOSTREPLY
+        #elif outerMessage.type == protoc.APPENDHOST:
+            #innerMessage = protoc.AppendHost()
+            #innerMessage = outerMessage.ah
+            #messageType = protoc.APPENDHOST
+        #elif outerMessage.type == protoc.APPENDHOSTREPLY:
+            #innerMessage = protoc.AppendHostReply()
+            #innerMessage = outerMessage.ahr
+            #messageType = protoc.APPENDHOSTREPLY
+        
+        # Until the instance of Raft has a log file
+        if messageType != protoc.JOINREPLY and self.logFileName is None:
+            return None 
+   
+        if messageType == protoc.JOINREPLY:
+            print("ADDING HOST")
 
         # for all servers in all states the first thing we need to check is
         # that our term number is not out of date
@@ -248,17 +295,33 @@ class Server:
         # apply
         replyMessageType, replyMessage = self.StateInfo.handleMessage(messageType, innerMessage)
         
+        #TO-DO: Allow host to be added even when it is the zero entry in log
+        #TO-DO: Make function to add all entries of host to nodeAddr when accepted to System
+        #       (Recover process)
+        #TO-DO: Should I restart nodeaddr when starting up? Prop huh.
+        #TO-DO:: Allow for hosts to leave the system
         if self.isFollower():
-            # only responsibility is to respond to messages from Candidates and
-            # leaders
+            # only responsibility is to respond to messages from Candidates and leaders
             if replyMessageType == protoc.APPENDREPLY and replyMessage.success:
                 self.resetTimer()
-            if replyMessageType == protoc.APPENDHOSTREPLY and replyMessage.success:
+            if messageType == protoc.JOINREPLY and innerMessage.success:
+                self.addHostInfo(innerMessage.assignedAddr, innerMessage.assignedPort)
+            #if replyMessageType == protoc.APPENDHOSTREPLY and replyMessage.success:
                 # Uncomment when using the raspberry pi
                 #self.writeHostToFile(innerMessage.hostAddr, innerMessage.hostPort)
-                self.addHostToNodeAddrs(innerMessage.hostAddr, innerMessage.hostPort)
-                replyMessage.success = True
-            self.outgoingMessageQ.put_nowait((replyMessageType, replyMessage))
+                #self.addHostToNodeAddrs(innerMessage.hostAddr, innerMessage.hostPort)
+                #replyMessage.success = True
+            searchIndex = self.StateInfo.searchLastAddedHost()
+            if searchIndex > self.StateInfo.lastAppliedHost:
+                self.StateInfo.lastAppliedHost = self.StateInfo.searchLastAddedHost()
+                data = self.StateInfo.retrieveLogData(self.StateInfo.lastAppliedHost)
+                address, port = self.extractNetworkInfo(data)
+                # self.writeHostToFile(address, port)
+                if address is not self.addr[0]:
+                    self.addHostToNodeAddrs(address, port)
+            
+            if replyMessageType is not None:
+                self.outgoingMessageQ.put_nowait((replyMessageType, replyMessage))
         elif self.isCandidate():
             # if we have something to send then just need to send it
             if replyMessageType is not None:
@@ -273,19 +336,35 @@ class Server:
                     self.transition('Leader')
 
         elif self.isLeader():
-            if replyMessageType == protoc.APPENDHOST:
-                hostPort = self.getNewPort()
-                self.nextAdded = (replyMessage.hostAddr, hostPort)
-                self.sendAppendHostMessages(replyMessage, replyMessageType, hostPort)
+            if self.StateInfo.searchLastAddedHost() > self.StateInfo.lastAppliedHost:
+                self.StateInfo.lastAppliedHost = self.StateInfo.searchLastAddedHost()
+                data = self.StateInfo.retrieveLogData(self.StateInfo.lastAppliedHost)
+                address, port = self.extractNetworkInfo(data)
+                self.writeHostToFile(address, port)
+                self.addHostToNodeAddrs(address, port)
+                self.StateInfo.addHostToFollowerIndex(address)
+                print("Sent Reply")
+                self.sendJoinReplyMessage(address, port)
+            #if replyMessageType == protoc.APPENDHOST:
+                #hostPort = self.getNewPort()
+                #self.nextAdded = (replyMessage.hostAddr, hostPort)
+                #self.sendAppendHostMessages(replyMessage, replyMessageType, hostPort)
+            if messageType == protoc.JOINSYSTEM:
+                addHostData = "Add Host: " + innerMessage.fromAddr + ", " + str(self.getNewPort())
+                print("This is data: " + addHostData)
+                messageType,logEntryMessage = self.StateInfo.createLogEntry(addHostData)
+                for server in self.NodeAddrs:
+                    messageType,outgoingMessage = self.StateInfo.createAppendEntries(server[0], server[1], [logEntryMessage,])
+                    self.outgoingMessageQ.put_nowait((messageType, outgoingMessage))
             elif replyMessageType is not None:
                 replyMessage.toAddr = innerMessage.fromAddr
                 replyMessage.toPort = innerMessage.fromPort
                 self.outgoingMessageQ.put_nowait((replyMessageType, replyMessage))
-            else:
-                if self.StateInfo.appended > (len(self.NodeAddrs) + 1) // 2:
-                    self.StateInfo.appended = 0
-                    self.writeHostToFile(innerMessage.hostAddr, innerMessage.hostPort)
-                    self.writeToNodeAddrs(innerMessage.hostAddr, innerMessage.hostPort)
+            #else:00
+                #if self.StateInfo.appended > (len(self.NodeAddrs) + 1) // 2:
+                    #self.StateInfo.appended = 0
+                    #self.writeHostToFile(innerMessage.hostAddr, innerMessage.hostPort)
+                    #self.writeToNodeAddrs(innerMessage.hostAddr, innerMessage.hostPort)
                     
 
     def clientListenerThread(self):

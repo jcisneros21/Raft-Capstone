@@ -8,16 +8,21 @@ import os
     functionality that will be passed on to its children.
 '''
 
+# I forgot passing in the paramaters.
+# TO-DO: need to 
+
 class State():
   def __init__(self, term, logFile, currentLog=None):
     self.term = term
     self.logFile = logFile
     self.log = {}
     readFile = self.readLogFromFile()
+    self.lastAppliedHost = self.searchLastAddedHost()
     
-    higherTerm = self.readTermNumber()
-    if higherTerm > self.term:
-      self.term = higherTerm
+    if readFile is True:
+      higherTerm = self.readTermNumber()
+      if higherTerm > self.term:
+        self.term = higherTerm
 
     # If no log has been passed or been read, create a new log
     if not readFile and currentLog is None:
@@ -92,38 +97,14 @@ class State():
     voteack.granted = True
     return protoc.VOTERESULT, voteack
 
-  # Retrieve file for saving Term Number
-  def getTermFile(self, logfile):
-    filename = ''
-    if('1' in logfile):
-      filename = 'state1.txt'
-    elif('2' in logfile):
-      filename = 'state2.txt'
-    elif('3' in logfile):
-      filename = 'state3.txt'
-    elif('4' in logfile):
-      filename = 'state4.txt'
-    elif('5' in logfile):
-      filename = 'state5.txt'
-    return filename
-
   # Save Term Number to file
   def saveTermNumber(self):
-    filename = self.getTermFile(self.logFile)
-    with open(filename, 'w+') as fp:
-      fp.write(str(self.term))
+    self.log[str(-1)]["creationTerm"] = self.term
+    self.writeLogToFile()
 
   # Retrieve Term Number from file
   def readTermNumber(self):
-    termNumber = 0
-    filename = self.getTermFile(self.logFile)
-    try:
-      with open(filename, 'r') as fp:
-        for line in fp:
-          termNumber = int(line.split()[0])
-      return termNumber
-    except FileNotFoundError as e:
-      return 0
+    return self.log[str(-1)]["creationTerm"]
 
   # Stores a Dictionary of a LogEntry Message into a Log
   def writeToLog(self, message):
@@ -175,8 +156,9 @@ class State():
 
   # Writes the Log to the logFile stated
   def writeLogToFile(self):
-    with open(self.logFile, 'w+') as fp:
-      json.dump(self.log, fp, sort_keys=True, indent=2, separators=(',',': '))
+    if self.logFile is not None:
+      with open(self.logFile, 'w+') as fp:
+        json.dump(self.log, fp, sort_keys=True, indent=2, separators=(',',': '))
 
   # Extracts a Saved Log from logFile 
   def readLogFromFile(self):
@@ -198,6 +180,36 @@ class State():
     else:
       return False
 
+  # TO-DO: I need to make a function where once a node
+  # joins the system, it will look through all log
+  # entries for any added hosts
+
+  # Format for data
+  # Add Host: IP, Port #
+  def isCommittedHostEntry(self):
+    lastEntry = self.log[str(self.lastApplied)]
+    if lastEntry["committed"] is True:
+      data = lastEntry["data"]
+      if "Add Host" in data:
+        return True
+    return False
+
+  def searchLastAddedHost(self):
+    if len(self.log) == 0:
+      return -1
+    else:
+      highest = -1
+      for entry in self.log.values():
+        if entry["committed"] is True and "Add Host" in entry["data"]:
+          if entry["logPosition"] > highest:
+            highest = entry["logPosition"]
+      return highest
+
+  def retrieveLogData(self, index):
+    if index > len(self.log):
+      return None
+    else:
+      return self.log[str(index)]["data"]
 ''' 
     The Leader State will initiate communication with all other
     Follower States on the network. This communication involves
@@ -221,6 +233,9 @@ class LeaderState(State):
   def initializeFollowerIndex(self, addressLog):
     for address in addressLog:
       self.totalFollowerIndex[address[0]] = (-1,-1)
+
+  def addHostToFollowerIndex(self, address):
+    self.totalFollowerIndex[address] = (-1,-1)
 
   # Creates the AppendEntries Messages for the server
   def createAppendEntries(self, toAddr, toPort, entries=[]):
@@ -258,12 +273,12 @@ class LeaderState(State):
       if message.success:
         # If the Follower has appended a LogEntry, update that Follower's commit and match index
         if (message.matchIndex > self.totalFollowerIndex[message.fromAddr][1]):
-          index = (message.matchIndex - 1, message.matchIndex)
+          index = (message.matchIndex + 1, message.matchIndex)
           self.totalFollowerIndex[message.fromAddr] = index
       else:
         # Preform Node Recovery
         if self.totalFollowerIndex[message.fromAddr][0] > -1:
-          index = (self.totalFollowerIndex[message.fromAddr][0] - 1, message.matchIndex)
+          index = (message.matchIndex, message.matchIndex - 1)
           self.totalFollowerIndex[message.fromAddr] = index
         return self.createAppendEntries(message.fromAddr, message.fromPort, self.createEntriesList(self.totalFollowerIndex[message.fromAddr][0]))
 
@@ -276,9 +291,11 @@ class LeaderState(State):
             pass
             #print("Couldn't Commit Entries")
     elif messageType is protoc.JOINSYSTEM:
-      return self.createAppendHost(message.fromAddr)
-    elif messageType is protoc.APPENDHOSTREPLY:
-      self.appended += 1
+      return protoc.JOINSYSTEM, None
+      #TO-DO: This is where I want to create a new entry
+      #return self.createAppendHost(message.fromAddr)
+    #elif messageType is protoc.APPENDHOSTREPLY:
+      #self.appended += 1
 
     return None, None
 
@@ -340,10 +357,14 @@ class LeaderState(State):
     self.printLogEntry(self.lastApplied)
     return protoc.LOGENTRY, message
 
-  def createAppendHost(self, hostAddress):
-    message = protoc.AppendHost()
-    message.hostAddr = hostAddress
-    return protoc.APPENDHOST, message
+  def createJoinReply(self):
+    message = protoc.JoinReply()
+    return protoc.JOINREPLY, message
+
+  #def createAppendHost(self, hostAddress):
+    #message = protoc.AppendHost()
+    #message.hostAddr = hostAddress
+    #return protoc.APPENDHOST, message
 
 
 ''' 
@@ -386,6 +407,8 @@ class CandidateState(State):
   def requestVote(self):
     message = protoc.RequestVote()
     message.term = self.term
+    message.lastLogIndex = self.lastApplied
+    message.lastLogTerm = self.log[str(message.lastLogIndex)]["creationTerm"]
     return protoc.REQUESTVOTE, message
 
 
@@ -402,8 +425,11 @@ class FollowerState(State):
       if self.voted:
         return self.sendVoteNACK(message.fromAddr, message.fromPort)
       else:
-        self.voted = True
-        return self.sendVoteACK(message.fromAddr, message.fromPort)
+        if message.lastLogIndex >= self.lastApplied and message.lastLogTerm >= self.log[str(self.lastApplied)]["creationTerm"]:
+          self.voted = True
+          return self.sendVoteACK(message.fromAddr, message.fromPort)
+        else:
+          return self.sendVoteNACK(message.fromAddr, message.fromPort)
     # If AppendEntries Message is Recieved
     elif messageType == protoc.APPENDENTRIES:
       if message.term < self.term:
@@ -439,11 +465,11 @@ class FollowerState(State):
         self.writeLogToFile()
 
       return self.replyAEACK(message.fromAddr, message.fromPort)
-    elif messageType == protoc.APPENDHOST:
-      return self.createAppendHostReply()
+    #elif messageType == protoc.APPENDHOST:
+      #return self.createAppendHostReply()
     # TO-DO: Logic for this
     elif messageType == protoc.JOINREPLY:
-      return True
+      return None, None
 
   # Commit entries from index
   def commitUpToIndex(self, index):
@@ -457,3 +483,7 @@ class FollowerState(State):
   def createAppendHostReply(self):
     message = protoc.AppendHostReply()
     return protoc.APPENDHOSTREPLY, message
+
+  def joinSystemMessage(self):
+    message = protoc.JoinSystem()
+    return protoc.JOINSYSTEM, message
