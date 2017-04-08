@@ -93,6 +93,8 @@ message JoinReply {
   bool success = 5;
   string assignedAddr = 6;
   int32 assignedPort = 7;
+  string leaderAddr = 8;
+  int32 leaderPort = 9;
 }
 
 // Append Host Message 

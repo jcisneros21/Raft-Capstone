@@ -19,6 +19,8 @@ class Server:
         self.logFileName = None
         self.ServerFlag = False
         self.TimerFlag = True
+        
+        self.foundLeader = False
 
         # figure out who we need to listen for
         nodeaddrsfile = open('nodeaddrs.txt', 'r')
@@ -68,16 +70,24 @@ class Server:
 
     # Need to find Leader
     # TO-DO: Modfify it to find leader
-    def sendJoinMessage(self):
+    def sendJoinMessages(self):
+        for server in self.NodeAddrs:
+            messageType, message = self.StateInfo.joinSystemMessage()
+            message.toAddr = server[0]
+            message.toPort = server[1]
+            self.outgoingMessageQ.put_nowait((messageType, message))
+
+    def sendJoinMessage(self, addr, port):
         messageType, message = self.StateInfo.joinSystemMessage()
-        message.toAddr = "10.0.0.1"
-        message.toPort = 9000
+        message.toAddr = addr
+        message.toPort = port
         self.outgoingMessageQ.put_nowait((messageType, message))
 
     # Add new host to host file
     def writeHostToFile(self, address, port):
         with open('nodeaddrs.txt', 'a') as addrFile:
-            addrFile.write(address + ',' + str(port) + ',' + 'logfile6.txt')
+            logNumber = self.getLogNumber(address)
+            addrFile.write(address + ',' + str(port) + ',' + 'logfile' + logNumber + '.txt\n')
 
     # Add new host to host list
     def addHostToNodeAddrs(self, address, port):
@@ -87,7 +97,8 @@ class Server:
     
     def addHostInfo(self, address, port): 
         self.addr = (address, port)
-        self.logFileName = "logfile6.txt"
+        logNumber = self.getLogNumber(address)
+        self.logFileName = "logfile" + logNumber + ".txt"
         print(self.logFileName)
         self.timer.start()
         self.listen()
@@ -95,6 +106,10 @@ class Server:
     # Get new Port for Host
     def getNewPort(self):
         return (len(self.NodeAddrs) + 9000 + 1)
+
+    def getLogNumber(self, addr):
+        parts = addr.split('.')
+        return parts[3]
 
     def extractNetworkInfo(self, data):
         addr = ""
@@ -135,7 +150,7 @@ class Server:
         self.Socket.bind(self.addr)
         if self.addr[1] == 8999:
             print("HEEEEEEEEEELLLO")
-            self.sendJoinMessage()
+            self.sendJoinMessages()
         while True:
             data = self.Socket.recv(1024)
             threading.Thread(target=self.messageHandler, args=(data,)).start()
@@ -304,8 +319,18 @@ class Server:
             # only responsibility is to respond to messages from Candidates and leaders
             if replyMessageType == protoc.APPENDREPLY and replyMessage.success:
                 self.resetTimer()
+            if replyMessageType == protoc.JOINREPLY and replyMessage.success == False:
+                replyMessage.toAddr = innerMessage.fromAddr
+                replyMessage.toPort = innerMessage.fromPort
             if messageType == protoc.JOINREPLY and innerMessage.success:
                 self.addHostInfo(innerMessage.assignedAddr, innerMessage.assignedPort)
+            
+            if self.StateInfo.leaderInfo != None and self.foundLeader == False:
+                self.foundLeader = True
+                if self.StateInfo.leaderInfo not in self.NodeAddrs:
+                    print("\n\nWe are contacting another leader\n\n")
+                    self.sendJoinMessage(self.StateInfo.leaderInfo[0], selfStateInfo.leaderInfo[1])
+ 
             #if replyMessageType == protoc.APPENDHOSTREPLY and replyMessage.success:
                 # Uncomment when using the raspberry pi
                 #self.writeHostToFile(innerMessage.hostAddr, innerMessage.hostPort)

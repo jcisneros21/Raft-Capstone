@@ -1,0 +1,26 @@
+{
+  "-1": {
+    "committed": true,
+    "creationTerm": 5,
+    "data": "",
+    "logPosition": -1
+  },
+  "0": {
+    "committed": true,
+    "creationTerm": 1,
+    "data": "Add Host: 10.0.0.5, 9004",
+    "logPosition": 0
+  },
+  "1": {
+    "committed": true,
+    "creationTerm": 1,
+    "data": "new entry",
+    "logPosition": 1
+  },
+  "2": {
+    "committed": true,
+    "creationTerm": 1,
+    "data": "Add Host: 10.0.0.6, 9005",
+    "logPosition": 2
+  }
+}

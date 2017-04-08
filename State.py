@@ -210,6 +210,7 @@ class State():
       return None
     else:
       return self.log[str(index)]["data"]
+
 ''' 
     The Leader State will initiate communication with all other
     Follower States on the network. This communication involves
@@ -418,6 +419,7 @@ class FollowerState(State):
     print('New Follower state. Term # {}\n'.format(self.term))
     self.voted = False
     self.saveTermNumber()
+    self.leaderInfo = None
 
   def handleMessage(self, messageType, message):
     # If RequestVote Message is Recieved
@@ -443,6 +445,7 @@ class FollowerState(State):
           if self.log[str(message.prevLogIndex)]["creationTerm"] != message.prevLogTerm:
             return self.replyAENACK(message.fromAddr, message.fromPort)
 
+      self.leaderInfo = (message.fromAddr, message.fromPort)
       # Delete entries if they don't match the leader's log
       if len(message.entries) > 0:
         for entry in message.entries:
@@ -469,7 +472,14 @@ class FollowerState(State):
       #return self.createAppendHostReply()
     # TO-DO: Logic for this
     elif messageType == protoc.JOINREPLY:
+      if self.leaderInfo == None:
+        self.leaderInfo = (message.leaderAddr, message.leaderPort)
       return None, None
+    elif messageType == protoc.JOINSYSTEM:
+      if self.leaderInfo != None:
+        return self.createJoinReply()
+      else:
+        return None, None    
 
   # Commit entries from index
   def commitUpToIndex(self, index):
@@ -487,3 +497,11 @@ class FollowerState(State):
   def joinSystemMessage(self):
     message = protoc.JoinSystem()
     return protoc.JOINSYSTEM, message
+
+  def createJoinReply(self):
+    message = protoc.JoinReply()
+    message.leaderAddr = self.leaderInfo[0]
+    message.leaderPort = self.leaderInfo[1]
+    message.success = False
+    return protoc.JOINREPLY, message
+
