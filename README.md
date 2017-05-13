@@ -85,7 +85,7 @@ Raft is now running!
 Once you have initialized an instance of our Raft algorithm on each virtual host, they will began a process called Leader Election. In this phase, one instance of Raft will try to become Leader. You will know if a instance has become a leader by the terminal that outputs “New Leader state, Term #2”. Another indicator is if the terminal is no longer outputting the Election Timeout Value.
 
 #### Requests
-You can start appending request via the Leader’s terminal. Once you are on the Leader’s terminal, write any given string and press enter. The leader will take that string and wrap it with a Log Entry message to start the consensus process of Raft. Eventually, if a majority hosts are running the instance of Raft, the log message will be committed and a consensus has been reached.
+You can start appending request via the Leader’s terminal. Once you are on the Leader’s terminal, write any given string and press enter. The leader will take that string and wrap it with a Log Entry message to start the consensus process of Raft. Eventually, if a majority of hosts are running the instance of Raft, the log message will be committed and a consensus has been reached.
 
 #### Output the entries inside a Log
 If you want to see a log of a given instance of Raft, use the command:  
@@ -99,8 +99,11 @@ You can stop a given instance of Raft with the command:
 quit
 ```
 
+#### Deleting Logs
+You can delete the logs for each instance of Raft by running the bash script, deleteLogs.sh.
+
 #### Dynamic Host List
-You no longer need to continue to add another host by appending it to the host list. If the network information of a host in not on the global host list, you can just start up the instance of Raft and it will contact the system that is currently running by host list. That requested instance will eventually become added to the global host list and the Leader will preform the operations for node recovery. 
+You no longer need to continue to add another host by appending it to the host list. If the network information of a host in not on the global host list, you can just start up the instance of Raft and it will contact the system that is currently running by host list. That requested instance will eventually become added to the global host list and the Leader will preform the operations for node recovery.
 
 
 ## Authors
