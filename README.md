@@ -30,43 +30,80 @@ Setting up a network emulator, for example Mininet (version 2.0 and higher), and
 Links for instructions to set up both Mininet and Google Protocol Buffers can be found below:
 
 Mininet:  
-
 http://mininet.org/download/
 
-
-Google's Protocol Buffers README: 
- 
+Google's Protocol Buffers README:  
 https://github.com/google/protobuf
+
+For Google Protocol Buffers, you must install the the protocol compiler and the python runtime libraries in the environment that you plan to install Mininet. The version of Google Protocol Buffers that you will need to download is v3.1. You can find the zip file for downloading here:  
+
+https://github.com/google/protobuf/releases
+
+You have the choice of downloading the pre-compiled binary version of Google Protocol Buffers, which is the zip file that is named protoc-3.1.0-linux-x86, and installing the python runtime libraries afterwards. This is the fastest route and If you decide to take it, you must enter into the downloaded directory and place the binary protoc file that is located in the bin directory into your PATH variable. From here you can download the protobuf-python tar or zip file and follow the installation instructions from the README.md located in the python directory.  
+
+Otherwise, you can download the protobuf-python tar or zip file and install the protoc compiler and python runtime libraries from there. This will take a little longer as you have to wait for the installation to be completed. The directions for this process is in the README.md file that is located in the src directory. 
 
 ### Running Raft
 
-Once you have the pre-requisites set up, you can then clone the current repository and begin adding the IP addresses and port numbers of the many virtual hosts you plan to create to the host list "nodeaddrs.txt". 
- 
-Currently, we only have a static host list where the user must specify the IP address and port number for each host. We plan to create a dynamic host list sometime in the future to allow each host to connect to one another without the user having to specify the network information inside the host list.
+Once you have the pre-requisites set up, you can then clone the current repository to the environment with Mininet and begin adding the IP addresses and port numbers of the many virtual hosts you plan to create to our host list "nodeaddrs.txt".
 
-Once you have the host list set up, you can then run this exact command on a host to initiate Raft:
+Already we include the standard of five hosts with their IP address, port number and their specified log file. Each IP address in the host list corresponds to what Mininet already sets up when creating a host. If you would like to add another host to the host list, please append the following line to the end of file.  
+```
+[IP address],[Port Number],[logfile(# of host).txt] 
+```
+For information regarding commands in Mininet, please visit the link below:  
 
-```  
+http://mininet.org/walkthrough/#interact-with-hosts-and-switches
+
+To get started to initialize five virtual hosts in Mininet, you can use the command:
+```
+sudo mn –topo single,5
+```
+
+Just to make sure everything has went well, ping all five hosts with the command  
+```
+pingall
+```
+
+in the Mininet terminal. This will tell us if a virtual host is not able to communicate with other hosts in the virtual network. If not, there may have been some issues when Mininet was initialized or when installing Mininet. 
+
+Once all five virtual hosts can communicate with each other, you can open separate terminals for each host using the command:
+```
+xterm h1 h2 h3 h4 h5
+```
+
+Now, please run a instance of our implementation of the Raft Algorithm on each terminal with the command:
+```
 python3 test.py
-```  
+```
+Raft is now running!
+
+### Features
+
+#### Leader Elections
+
+Once you have initialized an instance of our Raft algorithm on each virtual host, they will began a process called Leader Election. In this phase, one instance of Raft will try to become Leader. You will know if a instance has become a leader by the terminal that outputs “New Leader state, Term #2”. Another indicator is if the terminal is no longer outputting the Election Timeout Value.
+
+#### Requests
+You can start appending request via the Leader’s terminal. Once you are on the Leader’s terminal, write any given string and press enter. The leader will take that string and wrap it with a Log Entry message to start the consensus process of Raft. Eventually, if a majority hosts are running the instance of Raft, the log message will be committed and a consensus has been reached.
+
+#### Output the entries inside a Log
+If you want to see a log of a given instance of Raft, use the command:  
+```
+printlog
+```
+
+#### Stopping an instance of Raft
+You can stop a given instance of Raft with the command:
+```
+quit
+```
+
+#### Dynamic Host List
+You no longer need to continue to add another host by appending it to the host list. If the network information of a host in not on the global host list, you can just start up the instance of Raft and it will contact the system that is currently running by host list. That requested instance will eventually become added to the global host list and the Leader will preform the operations for node recovery. 
 
 
 ## Authors
 
 * **Fred Trelz**
 * **Jessie Cisneros**
-
-## TO-DO
-
-* Fixing current bugs in the system  
-- There seems to be a bug when saving term numbers for each node. Fixing this bug is top priority.
-
-* Testing and Redesigning
-
-* Implementing Dynamic Host List Functionality
-
-* Implementing Fast Raft Functionality
-
-* Implementing ACBBA (Auction Consensus Based Bundle Alogorithm)
-
-* Testing Raft with Different Topologies
