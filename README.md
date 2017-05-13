@@ -55,7 +55,7 @@ For information regarding commands in Mininet, please visit the link below:
 
 http://mininet.org/walkthrough/#interact-with-hosts-and-switches
 
-To get started to initialize five virtual hosts in Mininet, you can use the command:
+To get started in initializing five virtual hosts in Mininet, you can use the command:
 ```
 sudo mn –topo single,5
 ```
